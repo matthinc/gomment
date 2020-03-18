@@ -1,0 +1,12 @@
+* gomment - A simple comment microservice using Go and Docker
+ [[https://api.travis-ci.com/matthinc/gomment.svg?branch=master]]
+
+ The main goal of this project is to create a small and lightweight comment system for any
+ kind of website or app (and to learn Go).
+** Planned features:
+   - [ ] PostgreSQL or SQLite backend
+   - [ ] Nesting comments (Reddit style)
+   - [ ] Publish comments after review
+   - [ ] API for creating/listing comments
+   - [ ] Optional: E-Mail notifications
+   - [ ] Optional: Captchas
