@@ -1,10 +1,9 @@
 package main
 
 import (
-    "fmt"
+    "github.com/matthinc/gomment/api"
 )
 
 func main() {
-    // Initial
-    fmt.Println("Hello, World!")
+    api.StartApi()
 }
