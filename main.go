@@ -13,6 +13,10 @@ func main() {
 	if err != nil {
 		os.Exit(2)
 	}
+	err = db.Setup()
+	if err != nil {
+		os.Exit(3)
+	}
 	
     api.StartApi()
 }

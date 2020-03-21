@@ -4,7 +4,6 @@ import (
     "github.com/gin-gonic/gin"
     "github.com/matthinc/gomment/model"
     "net/http"
-    "fmt"
 )
 
 func routeStatus(c *gin.Context) {
