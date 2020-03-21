@@ -4,7 +4,7 @@ import (
     "github.com/gin-gonic/gin"
     "github.com/matthinc/gomment/model"
     "net/http"
-    "fmt"
+	"fmt"
 )
 
 func routeStatus(c *gin.Context) {
@@ -14,7 +14,7 @@ func routeStatus(c *gin.Context) {
 func routePostComment(c *gin.Context) {
     var comment model.Comment
     c.BindJSON(&comment)
-    //fmt.Println(comment.Content)
+    fmt.Println(comment.Text)
     c.String(http.StatusOK, "ok")
 }
 

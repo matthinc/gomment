@@ -1,7 +1,9 @@
 package model
 
 type Comment struct {
-    Name string    `json:"name" binding:"required"`
-    Email string   `json:"email" binding:"required"`
-    Content string `json:"content" binding:"required"`
+    Author string    `json:"author" binding:"required"`
+    Email string     `json:"email" binding:"required"`
+    Text string      `json:"text" binding:"required"`
+    ThreadId int     `json:"thread_id" binding:"required"`
+    ParentId int     `json:"parent_id" binding:""`
 }
