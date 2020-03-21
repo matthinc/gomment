@@ -51,3 +51,32 @@ func (db *DB)  AddComment(comment* model.Comment) error {
         comment.ParentId)
     return err
 }
+
+func (db *DB) QueryComments(thread int) []*model.Comment {
+    rows, _ := db.database.Query("SELECT comment_id, parent_id, created_at, author, text FROM `comment` where thread_id = ?", thread)
+    defer rows.Close()
+
+    var response []*model.Comment
+
+    var (
+        id int
+        parent int
+        created string
+        author string
+        text string
+    )
+
+    for rows.Next() {
+        rows.Scan(&id, &parent, &created, &author, &text)
+        comment := model.Comment {
+            Id: id,
+            ParentId: parent,
+            Created: created,
+            Author: author,
+            Text: text,
+        }
+        response = append(response, &comment)
+    }
+
+    return response
+}

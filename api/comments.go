@@ -6,6 +6,7 @@ import (
     "github.com/matthinc/gomment/logic"
     "net/http"
     "fmt"
+    "encoding/json"
 )
 
 func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
@@ -16,4 +17,10 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
     }
     logic.AddComment(&comment)
     c.String(http.StatusOK, "ok")
+}
+
+func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
+    comments := logic.GetCommentsTree(0)
+    commentsJson, _ := json.Marshal(comments)
+    c.String(http.StatusOK, string(commentsJson))
 }

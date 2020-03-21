@@ -16,6 +16,7 @@ func injectLogic(routeHandler routeHandlerType, logic *logic.BusinessLogic) gin.
 func StartApi(logic *logic.BusinessLogic) {
     router := gin.Default()
     router.GET("/status", injectLogic(routeStatus, logic))
+    router.GET("/comments", injectLogic(routeGetComments, logic))
     router.POST("/comment", injectLogic(routePostComment, logic))
     router.Run(":8000")
 }
