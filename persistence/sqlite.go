@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"database/sql"
     _ "github.com/mattn/go-sqlite3"
+    "github.com/matthinc/gomment/model"
 )
 
 type DBError struct {
@@ -38,4 +39,15 @@ func (db* DB) Setup() (err error) {
 	}
 
 	return nil
+}
+
+func (db *DB)  AddComment(comment* model.Comment) error {
+    _, err := db.database.Exec(
+        "INSERT INTO `comment` (text, author, email, thread_id, parent_id,created_at) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)",
+        comment.Text,
+        comment.Author,
+        comment.Email,
+        comment.ThreadId,
+        comment.ParentId)
+    return err
 }

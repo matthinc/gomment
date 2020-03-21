@@ -4,7 +4,8 @@ import (
 	"os"
 	
     "github.com/matthinc/gomment/api"
-    "github.com/matthinc/gomment/persistence"	
+    "github.com/matthinc/gomment/persistence"
+    "github.com/matthinc/gomment/logic"	
 )
 
 func main() {
@@ -17,6 +18,8 @@ func main() {
 	if err != nil {
 		os.Exit(3)
 	}
-	
-    api.StartApi()
+
+    logic := logic.BusinessLogic { &db }
+    
+    api.StartApi(&logic)
 }

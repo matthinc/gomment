@@ -2,25 +2,20 @@ package api
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/matthinc/gomment/model"
-    "net/http"
-	"fmt"
+    "github.com/matthinc/gomment/logic"
 )
 
-func routeStatus(c *gin.Context) {
-    c.String(http.StatusOK, "running")
+type routeHandlerType func(*gin.Context, *logic.BusinessLogic)
+
+func injectLogic(routeHandler routeHandlerType, logic *logic.BusinessLogic) gin.HandlerFunc {
+    return func(c *gin.Context) {
+        routeHandler(c, logic)
+    }
 }
 
-func routePostComment(c *gin.Context) {
-    var comment model.Comment
-    c.BindJSON(&comment)
-    fmt.Println(comment.Text)
-    c.String(http.StatusOK, "ok")
-}
-
-func StartApi() {
+func StartApi(logic *logic.BusinessLogic) {
     router := gin.Default()
-    router.GET("/status", routeStatus)
-    router.POST("/comment", routePostComment)
+    router.GET("/status", injectLogic(routeStatus, logic))
+    router.POST("/comment", injectLogic(routePostComment, logic))
     router.Run(":8000")
 }
