@@ -8,5 +8,6 @@
    - [ ] Nesting comments (Reddit style)
    - [ ] Publish comments after review
    - [ ] API for creating/listing comments
+   - [ ] Optional: GDPR compliance
    - [ ] Optional: E-Mail notifications
    - [ ] Optional: Captchas
