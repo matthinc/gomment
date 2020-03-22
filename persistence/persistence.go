@@ -9,5 +9,6 @@ type Persistence interface {
 	Setup() error
 	Close()
 	AddComment(comment* model.Comment)
-    QueryComments(thread int) []*model.Comment
+    QueryComments(thread int) []model.Comment
+    QueryThreads() []model.Thread
 }

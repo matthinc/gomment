@@ -52,11 +52,11 @@ func (db *DB)  AddComment(comment* model.Comment) error {
     return err
 }
 
-func (db *DB) QueryComments(thread int) []*model.Comment {
+func (db *DB) QueryComments(thread int) []model.Comment {
     rows, _ := db.database.Query("SELECT comment_id, parent_id, created_at, author, text FROM `comment` where thread_id = ?", thread)
     defer rows.Close()
 
-    var response []*model.Comment
+    response := make([]model.Comment, 0)
 
     var (
         id int
@@ -75,7 +75,22 @@ func (db *DB) QueryComments(thread int) []*model.Comment {
             Author: author,
             Text: text,
         }
-        response = append(response, &comment)
+        response = append(response, comment)
+    }
+
+    return response
+}
+
+func (db *DB) QueryThreads() []model.Thread {
+    rows, _ := db.database.Query("SELECT DISTINCT thread_id FROM `comment`")
+    defer rows.Close()
+
+    response := make([]model.Thread, 0)
+
+    var id int
+    for rows.Next() {
+        rows.Scan(&id)
+        response = append(response, model.Thread {id})
     }
 
     return response

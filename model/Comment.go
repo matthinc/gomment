@@ -14,3 +14,7 @@ type CommentTree struct {
     Children []CommentTree   `json:"children"`
     Comment *Comment        `json:"comment"`
 }
+
+type Thread struct {
+    Id int
+}

@@ -4,12 +4,12 @@ import (
     "github.com/matthinc/gomment/model"
 )
 
-func (logic* BusinessLogic) GetComments(thread int) []*model.Comment {
+func (logic* BusinessLogic) GetComments(thread int) []model.Comment {
     comments := logic.DB.QueryComments(thread)
     return comments
 }
 
-func commentsToTree(comments []*model.Comment, parent int, depthLeft int) []model.CommentTree {
+func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model.CommentTree {
     tree := make([]model.CommentTree, 0)
     
     for _, comment := range comments {
@@ -23,7 +23,7 @@ func commentsToTree(comments []*model.Comment, parent int, depthLeft int) []mode
             tree = append(
                 tree,
                 model.CommentTree {
-                    Comment: comment,
+                    Comment: &comment,
                     Children: children,
                 })
         }

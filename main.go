@@ -43,7 +43,7 @@ func main() {
 		os.Exit(3)
 	}
 
-    logic := logic.BusinessLogic { &db, pwHash }
+    logic := logic.Create(&db, pwHash)
     
     api.StartApi(&logic)
 }
