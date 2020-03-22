@@ -22,6 +22,7 @@ func StartApi(logic *logic.BusinessLogic) {
 
     if len(logic.PwHash) > 0 {
         // enable admin routes
+        router.POST("/admin/login", injectLogic(routeAdminLogin, logic))
     }
     
     router.Run(":8000")
