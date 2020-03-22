@@ -10,7 +10,13 @@ import (
 
 func main() {
 	db := persistence.DB {}
-	err := db.Open("./gomment.db")
+
+    dbPath := os.Getenv("GOMMENT_DB_PATH")
+    if len(dbPath) == 0 {
+        dbPath = "./gomment.db"
+    }
+    
+	err := db.Open(dbPath)
 	if err != nil {
 		os.Exit(2)
 	}
