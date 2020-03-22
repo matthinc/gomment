@@ -18,5 +18,6 @@ func StartApi(logic *logic.BusinessLogic) {
     router.GET("/status", injectLogic(routeStatus, logic))
     router.GET("/comments", injectLogic(routeGetComments, logic))
     router.POST("/comment", injectLogic(routePostComment, logic))
+    router.GET("/comments/preview", injectLogic(routePreviewComments, logic))
     router.Run(":8000")
 }

@@ -34,5 +34,5 @@ func commentsToTree(comments []*model.Comment, parent int, depthLeft int) []*mod
 
 func (logic* BusinessLogic) GetCommentsTree(thread int) []*model.CommentTree {
     comments := logic.GetComments(thread)
-    return commentsToTree(comments, 0, 2)
+    return commentsToTree(comments, 0, 5)
 }

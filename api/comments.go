@@ -24,3 +24,10 @@ func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
     commentsJson, _ := json.Marshal(comments)
     c.String(http.StatusOK, string(commentsJson))
 }
+
+func routePreviewComments(c *gin.Context, logic *logic.BusinessLogic) {
+    preview := logic.GenerateHTMLThreadPreview(0)
+    c.Header("Content-Type", "text/html")
+    c.String(http.StatusOK, preview)
+}
+
