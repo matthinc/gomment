@@ -14,7 +14,7 @@ var previewColors =  [...] string {
     "#f0cfff",
 }
 
-func generateTreeHtmlPreview(tree *model.CommentTree, sb *strings.Builder, depth int) {
+func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth int) {
     comment := tree.Comment
     sb.WriteString(`<div style="border: 1px solid black;padding:5px;background-color:`)
     sb.WriteString(previewColors[depth % len(previewColors)])

@@ -11,6 +11,6 @@ type Comment struct {
 }
 
 type CommentTree struct {
-    Children []*CommentTree   `json:"children"`
+    Children []CommentTree   `json:"children"`
     Comment *Comment        `json:"comment"`
 }
