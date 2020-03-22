@@ -7,5 +7,5 @@ import (
 )
 
 func routeStatus(c *gin.Context, logic *logic.BusinessLogic) {
-    c.String(http.StatusOK, "running")
+    c.String(http.StatusOK, `{"status": "ok"}`)
 }
