@@ -19,5 +19,10 @@ func StartApi(logic *logic.BusinessLogic) {
     router.GET("/comments", injectLogic(routeGetComments, logic))
     router.POST("/comment", injectLogic(routePostComment, logic))
     router.GET("/comments/preview", injectLogic(routePreviewComments, logic))
+
+    if len(logic.PwHash) > 0 {
+        // enable admin routes
+    }
+    
     router.Run(":8000")
 }

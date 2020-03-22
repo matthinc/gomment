@@ -6,4 +6,5 @@ import (
 
 type BusinessLogic struct {
     DB *persistence.DB
+    PwHash string
 }
