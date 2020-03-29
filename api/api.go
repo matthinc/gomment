@@ -3,6 +3,7 @@ package api
 import (
     "net/http"
     "strings"
+    "strconv"
     
     "github.com/gin-gonic/gin"
     "github.com/matthinc/gomment/logic"
@@ -14,6 +15,18 @@ func injectLogic(routeHandler routeHandlerType, logic *logic.BusinessLogic) gin.
     return func(c *gin.Context) {
         routeHandler(c, logic)
     }
+}
+
+func getIntQueryParameter(c *gin.Context, parameter string, defaultValue int) int {
+    queryParameters := c.Request.URL.Query()
+    
+    value := defaultValue
+    valueStr, hasValue := queryParameters[parameter]
+    if hasValue {
+        value, _ = strconv.Atoi(valueStr[0])
+    }
+
+    return value
 }
 
 const AUTH_HEADER_PREFIX = "Bearer "
@@ -50,8 +63,7 @@ func StartApi(logic *logic.BusinessLogic) {
     router.GET("/status", injectLogic(routeStatus, logic))
     router.GET("/comments", injectLogic(routeGetComments, logic))
     router.POST("/comment", injectLogic(routePostComment, logic))
-    router.GET("/comments/preview", injectLogic(routePreviewComments, logic))
-
+  
     if len(logic.PwHash) > 0 {
         // enable admin routes
         router.POST("/admin/login", injectLogic(routeAdminLogin, logic))

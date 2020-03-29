@@ -23,7 +23,7 @@ func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model
             tree = append(
                 tree,
                 model.CommentTree {
-                    Comment: &comment,
+                    Comment: comment,
                     Children: children,
                 })
         }
@@ -32,7 +32,21 @@ func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model
     return tree
 }
 
-func (logic* BusinessLogic) GetCommentsTree(thread int) []model.CommentTree {
+func (logic* BusinessLogic) GetCommentsTree(thread int, depth int, max int, offset int, tree int) []model.CommentTree {
     comments := logic.GetComments(thread)
-    return commentsToTree(comments, 0, 5)
+    trees := commentsToTree(comments, 0, depth)
+
+    // Offset
+    if len(trees) > offset {
+        trees = trees[offset:]
+    } else {
+        trees = []model.CommentTree{}
+    }
+
+    // Max
+    if len(trees) > max && max > 0 {
+        trees = trees[:max]
+    }
+
+    return trees
 }

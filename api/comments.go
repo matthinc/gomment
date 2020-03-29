@@ -7,7 +7,7 @@ import (
     "net/http"
     "fmt"
     "encoding/json"
-)
+ )
 
 func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
     var comment model.Comment
@@ -20,14 +20,31 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 }
 
 func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
-    comments := logic.GetCommentsTree(0)
-    commentsJson, _ := json.Marshal(comments)
-    c.String(http.StatusOK, string(commentsJson))
+    // Required thread parameter
+    thread := getIntQueryParameter(c, "thread", -1)
+    if thread == -1 {
+        c.String(http.StatusBadRequest, "'thread'-parameter is not optional")
+    }
+
+    // Optional query parameters
+    depth := getIntQueryParameter(c, "depth", 0)
+    max := getIntQueryParameter(c, "max", 0)
+    offset := getIntQueryParameter(c, "offset", 0)
+    tree := getIntQueryParameter(c, "tree", 0)
+    preview := getIntQueryParameter(c, "preview", 0)
+
+    // Query comments tree
+    comments := logic.GetCommentsTree(thread, depth, max, offset, tree)
+
+    // Return JSON or generate preview
+    if preview == 0 {
+        commentsJson, _ := json.Marshal(comments)
+        c.String(http.StatusOK, string(commentsJson))
+    } else {
+        preview := logic.GenerateHTMLThreadPreview(comments)
+        c.Header("Content-Type", "text/html")
+        c.String(http.StatusOK, preview)
+    }
 }
 
-func routePreviewComments(c *gin.Context, logic *logic.BusinessLogic) {
-    preview := logic.GenerateHTMLThreadPreview(0)
-    c.Header("Content-Type", "text/html")
-    c.String(http.StatusOK, preview)
-}
 

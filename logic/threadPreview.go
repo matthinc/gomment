@@ -40,13 +40,11 @@ func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth 
     sb.WriteString(`</div>`)
 }
 
-func (logic* BusinessLogic) GenerateHTMLThreadPreview(thread int) string {
-    tree := logic.GetCommentsTree(thread)
-    
+func (logic* BusinessLogic) GenerateHTMLThreadPreview(commentsTree []model.CommentTree) string {
     var sb strings.Builder
     sb.WriteString("<h1>Thread Preview</h1>")
 
-    for _, topLevelNode := range tree {
+    for _, topLevelNode := range commentsTree {
         generateTreeHtmlPreview(topLevelNode, &sb, 0)
     }
     
