@@ -59,5 +59,9 @@ class ApiCommentsTest(TestBase):
         self.assertEqual(len(json[0]['children'][0]['children']), 1)
         self.assertEqual(json[0]['children'][0]['children'][0]['comment']['text'], 'Comment 1 1 1')
 
-        
+        # Test max and offset
+        response = requests.get(EP + '/comments?thread=0&depth=0&max=1&offset=2')
+        json = response.json()
+        self.assertEqual(len(json), 1)
+        self.assertEqual(json[0]['comment']['text'], 'Comment 3')
         
