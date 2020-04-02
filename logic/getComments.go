@@ -9,6 +9,15 @@ func (logic* BusinessLogic) GetComments(thread int) []model.Comment {
     return comments
 }
 
+func commentHasChildren(comments []model.Comment, id int) bool {
+	for _, comment := range comments {
+		if comment.ParentId == id {
+			return true
+		}
+	}
+	return false
+}
+
 func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model.CommentTree {
     tree := make([]model.CommentTree, 0)
     
@@ -16,14 +25,15 @@ func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model
         if comment.ParentId == parent {
             var children []model.CommentTree
 			var hasChildren bool
+			
             if depthLeft > 0 {
                 children = commentsToTree(comments, comment.Id, depthLeft - 1)
 				hasChildren = len(children) > 0
             } else {
                 children = nil
-				// Calculate one more level to determine if this node has children
-				hasChildren = len(commentsToTree(comments, comment.Id, 1)) > 0
+				hasChildren = commentHasChildren(comments, comment.Id)
             }
+			
             tree = append(tree,
                 model.CommentTree { Comment: comment, Children: children, HasChildren: hasChildren })
         }
