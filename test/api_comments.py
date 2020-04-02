@@ -64,4 +64,28 @@ class ApiCommentsTest(TestBase):
         json = response.json()
         self.assertEqual(len(json), 1)
         self.assertEqual(json[0]['comment']['text'], 'Comment 3')
-        
+
+    def test_has_children(self):
+        self.postComment("User 1", "user1@mail.com", "Comment 1", 0, 0)
+        self.postComment("User 2", "user1@mail.com", "Comment 2", 0, 0)
+
+        self.postComment("User 3", "user1@mail.com", "Comment 2 1", 0, 2)
+
+        # Comment 1 never has children
+        response = requests.get(EP + '/comments?thread=0&depth=2')
+        json = response.json()
+        self.assertEqual(json[0]['has_children'], False)
+
+        response = requests.get(EP + '/comments?thread=0&depth=0')
+        json = response.json()
+        self.assertEqual(json[0]['has_children'], False)
+
+        # Comment 2 has children
+        response = requests.get(EP + '/comments?thread=0&depth=2')
+        json = response.json()
+        self.assertEqual(json[1]['has_children'], True)
+
+        response = requests.get(EP + '/comments?thread=0&depth=0')
+        json = response.json()
+        self.assertEqual(json[1]['has_children'], True)
+

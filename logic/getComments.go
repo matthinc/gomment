@@ -15,17 +15,17 @@ func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model
     for _, comment := range comments {
         if comment.ParentId == parent {
             var children []model.CommentTree
+			var hasChildren bool
             if depthLeft > 0 {
                 children = commentsToTree(comments, comment.Id, depthLeft - 1)
+				hasChildren = len(children) > 0
             } else {
                 children = nil
+				// Calculate one more level to determine if this node has children
+				hasChildren = len(commentsToTree(comments, comment.Id, 1)) > 0
             }
-            tree = append(
-                tree,
-                model.CommentTree {
-                    Comment: comment,
-                    Children: children,
-                })
+            tree = append(tree,
+                model.CommentTree { Comment: comment, Children: children, HasChildren: hasChildren })
         }
     }
     
