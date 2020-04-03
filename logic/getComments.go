@@ -10,12 +10,12 @@ func (logic* BusinessLogic) GetComments(thread int) []model.Comment {
 }
 
 func commentHasChildren(comments []model.Comment, id int) bool {
-	for _, comment := range comments {
-		if comment.ParentId == id {
-			return true
-		}
-	}
-	return false
+    for _, comment := range comments {
+        if comment.ParentId == id {
+            return true
+        }
+    }
+    return false
 }
 
 func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model.CommentTree {
@@ -24,16 +24,16 @@ func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model
     for _, comment := range comments {
         if comment.ParentId == parent {
             var children []model.CommentTree
-			var hasChildren bool
-			
+            var hasChildren bool
+            
             if depthLeft > 0 {
                 children = commentsToTree(comments, comment.Id, depthLeft - 1)
-				hasChildren = len(children) > 0
+                hasChildren = len(children) > 0
             } else {
                 children = nil
-				hasChildren = commentHasChildren(comments, comment.Id)
+                hasChildren = commentHasChildren(comments, comment.Id)
             }
-			
+            
             tree = append(tree,
                 model.CommentTree { Comment: comment, Children: children, HasChildren: hasChildren })
         }

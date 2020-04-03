@@ -30,7 +30,7 @@ func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth 
     sb.WriteString(`</div>`)
     // </author>
     sb.WriteString(comment.Text)
-	sb.WriteString(`<div style="padding: 3px 0px 3px 0px; color: blue">`)
+    sb.WriteString(`<div style="padding: 3px 0px 3px 0px; color: blue">`)
     sb.WriteString("Has children: " + strconv.FormatBool(tree.HasChildren))
     sb.WriteString(`</div>`)
     // <children>

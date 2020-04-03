@@ -13,7 +13,7 @@ type Comment struct {
 type CommentTree struct {
     Children []CommentTree   `json:"children"`
     Comment Comment          `json:"comment"`
-	HasChildren bool         `json:"has_children"`
+    HasChildren bool         `json:"has_children"`
 }
 
 type Thread struct {
