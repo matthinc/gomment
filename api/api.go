@@ -4,8 +4,9 @@ import (
     "net/http"
     "strings"
     "strconv"
-    
+
     "github.com/gin-gonic/gin"
+
     "github.com/matthinc/gomment/logic"
 )
 
@@ -19,7 +20,7 @@ func injectLogic(routeHandler routeHandlerType, logic *logic.BusinessLogic) gin.
 
 func getIntQueryParameter(c *gin.Context, parameter string, defaultValue int) int {
     queryParameters := c.Request.URL.Query()
-    
+
     value := defaultValue
     valueStr, hasValue := queryParameters[parameter]
     if hasValue {
@@ -38,7 +39,7 @@ func isAdmin(c *gin.Context, logic *logic.BusinessLogic) bool {
     } else {
         return false
     }
-    
+
     // everyone that has a valid session is a admin
     _, err := logic.GetSession(authHeader)
     if err == nil {
@@ -60,15 +61,19 @@ func adminArea(routeHandler routeHandlerType, logic *logic.BusinessLogic) gin.Ha
 
 func StartApi(logic *logic.BusinessLogic) {
     router := gin.Default()
+
+    // Static files
+    router.Static("/static", "./frontend")
+
     router.GET("/status", injectLogic(routeStatus, logic))
     router.GET("/comments", injectLogic(routeGetComments, logic))
     router.POST("/comment", injectLogic(routePostComment, logic))
-  
+
     if len(logic.PwHash) > 0 {
         // enable admin routes
         router.POST("/admin/login", injectLogic(routeAdminLogin, logic))
         router.GET("/admin/threads", adminArea(routeAdminThreads, logic))
     }
-    
+
     router.Run(":8000")
 }
