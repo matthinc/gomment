@@ -50,7 +50,38 @@
     border: 1px solid #00bbff;
 }
 
+/////// Comments ////////
+
 .gomment > .gomment-comments {
     display: inline-block;
     padding: 20px;
+}
+
+.gomment-comment {
+    padding: 15px 0px 0px 20px;
+}
+
+.gomment-comment > .gomment-comment-date {
+    display: inline;
+    font-style: italic;
+    font-size: 11px;
+    margin-left: 5px;
+}
+
+.gomment-comment > .gomment-comment-author {
+    display: inline;
+    color: #00bbff;
+    font-weight: bold;
+    font-size: 12px
+}
+
+.gomment-comment > .gomment-comment-text {
+    padding-top: 5px;
+    font-size: 14px
+}
+
+.gomment-comment > .gomment-comment-children {
+    margin-top: 5px;
+    padding-left: 5px;
+    border-left: 1px dashed #bebebe;
 }

@@ -11,7 +11,8 @@ window.gomment = function (options) {
         placeholder_name: 'Name',
         placeholder_email: 'E-Mail',
         placeholder_text: 'Your comment',
-        submit: 'Submit'
+        submit: 'Submit',
+        format_date: (date) => `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
     };
 
     // Optional options
@@ -42,15 +43,39 @@ window.gomment = function (options) {
     insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: i18n.submit });
 
     // Comments section
-    const comments = insertElement('div', 'gomment-comments', container);
+    const commentsElement = insertElement('div', 'gomment-comments', container);
 
     function queryComments(thread, offset, max, depth) {
         const apiURL = api.endsWith('/') ? api : `/${api}`;
         return window.fetch(`${apiURL}comments?thread=${thread}&offset=${offset}&max=${max}&depth=${depth}`);
     }
 
-    // Todo: Render comments
+    // Render single comment and children recursively
+    function renderComment(parent, comment) {
+        const commentElement = insertElement('div', 'gomment-comment', parent);
+        insertElement('div', 'gomment-comment-author', commentElement, { innerHTML: comment.comment.author });
+        insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: i18n.format_date(new Date(comment.comment.created_at)) });
+        insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: comment.comment.text });
+        const childrenElement = insertElement('div', 'gomment-comment-children', commentElement);
+
+        if (comment.children) {
+            for (const childComment of comment.children) {
+                renderComment(childrenElement, childComment);
+            }
+        }
+    }
+
+    // Render all (top level) comments with children
+    function renderComments(comments) {
+        // Remove all comments from element
+        commentsElement.innerHTML = '';
+        for (const comment of comments) {
+            renderComment(commentsElement, comment);
+
+        }
+    }
+
     queryComments(thread, 0, batchSize, maxDepth)
         .then(data => data.json())
-        .then(data => comments.innerHTML = JSON.stringify(data));
+        .then(data => renderComments(data));
 }
