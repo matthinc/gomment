@@ -15,6 +15,4 @@ class ApiBasicTest(TestBase):
         response = requests.get(EP + '/comments?thread=0')
         comments = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(comments, [])
-    
-
+        self.assertEqual(comments, {'total': 0, 'comments': []})

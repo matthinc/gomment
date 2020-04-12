@@ -66,11 +66,12 @@
     font-style: italic;
     font-size: 11px;
     margin-left: 5px;
+    color: #555555;
 }
 
 .gomment-comment > .gomment-comment-author {
     display: inline;
-    color: #00bbff;
+    color: black;
     font-weight: bold;
     font-size: 12px
 }
@@ -84,4 +85,26 @@
     margin-top: 5px;
     padding-left: 5px;
     border-left: 1px dashed #bebebe;
+}
+
+.gomment-comment > .gomment-comment-children > .gomment-show-more-depth-button {
+    margin-top: 5px;
+    color: #00bbff;
+    background-color: transparent;
+    border: none;
+    font-weight:bold;
+    cursor: pointer;
+}
+
+.gomment > .gomment-comments > .gomment-show-more-container > .gomment-show-more-button {
+    margin-top: 5px;
+    color: #00bbff;
+    background-color: transparent;
+    border: none;
+    font-weight:bold;
+    cursor: pointer;
+}
+
+.gomment > .gomment-comments > .gomment-show-more-container > .gomment-show-more-button:hover {
+    text-decoration: underline;
 }

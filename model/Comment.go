@@ -16,6 +16,11 @@ type CommentTree struct {
     HasChildren bool         `json:"has_children"`
 }
 
+type CommentsResponse struct {
+    Comments []CommentTree   `json:"comments"`
+    Total int                `json:"total"`
+}
+
 type Thread struct {
     Id int
 }

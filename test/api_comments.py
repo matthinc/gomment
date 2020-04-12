@@ -21,15 +21,19 @@ class ApiCommentsTest(TestBase):
 
         self.postComment("User 10", "user10@mail.com", "Comment 1 1 1 1", 0, 9) #ID: 10
 
+        #Test total
+        response = requests.get(EP + '/comments?thread=0&depth=0&max=1')
+        self.assertEqual(response.json()["total"], 5)
+
         # Test get all
         response = requests.get(EP + '/comments?thread=0&depth=0')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(len(json), 5)
         self.assertEqual(json[0]['children'], None)
 
         # Test offset
         response = requests.get(EP + '/comments?thread=0&depth=0&offset=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(len(json), 3)
         self.assertEqual(json[0]['comment']['text'], 'Comment 3')
         self.assertEqual(json[1]['comment']['text'], 'Comment 4')
@@ -37,14 +41,14 @@ class ApiCommentsTest(TestBase):
 
         # Test max
         response = requests.get(EP + '/comments?thread=0&depth=0&max=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(len(json), 2)
         self.assertEqual(json[0]['comment']['text'], 'Comment 1')
         self.assertEqual(json[1]['comment']['text'], 'Comment 2')
 
         # Test depth 1
         response = requests.get(EP + '/comments?thread=0&depth=1&max=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(json[0]['comment']['text'], 'Comment 1')
         self.assertEqual(json[0]['children'][0]['comment']['text'], 'Comment 1 1')
         self.assertEqual(json[0]['children'][1]['comment']['text'], 'Comment 1 2')
@@ -52,7 +56,7 @@ class ApiCommentsTest(TestBase):
 
         # Test depth 2
         response = requests.get(EP + '/comments?thread=0&depth=2&max=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(json[0]['comment']['text'], 'Comment 1')
         self.assertEqual(json[0]['children'][0]['comment']['text'], 'Comment 1 1')
         self.assertEqual(json[0]['children'][1]['comment']['text'], 'Comment 1 2')
@@ -61,7 +65,7 @@ class ApiCommentsTest(TestBase):
 
         # Test max and offset
         response = requests.get(EP + '/comments?thread=0&depth=0&max=1&offset=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(len(json), 1)
         self.assertEqual(json[0]['comment']['text'], 'Comment 3')
 
@@ -73,19 +77,18 @@ class ApiCommentsTest(TestBase):
 
         # Comment 1 never has children
         response = requests.get(EP + '/comments?thread=0&depth=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(json[0]['has_children'], False)
 
         response = requests.get(EP + '/comments?thread=0&depth=0')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(json[0]['has_children'], False)
 
         # Comment 2 has children
         response = requests.get(EP + '/comments?thread=0&depth=2')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(json[1]['has_children'], True)
 
         response = requests.get(EP + '/comments?thread=0&depth=0')
-        json = response.json()
+        json = response.json()["comments"]
         self.assertEqual(json[1]['has_children'], True)
-

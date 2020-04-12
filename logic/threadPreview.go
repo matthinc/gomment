@@ -43,13 +43,14 @@ func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth 
     sb.WriteString(`</div>`)
 }
 
-func (logic* BusinessLogic) GenerateHTMLThreadPreview(commentsTree []model.CommentTree) string {
+func (logic* BusinessLogic) GenerateHTMLThreadPreview(commentsResponse model.CommentsResponse) string {
     var sb strings.Builder
     sb.WriteString("<h1>Thread Preview</h1>")
+    sb.WriteString("<h5>" + strconv.Itoa(commentsResponse.Total) + " top level comments</h5>")
 
-    for _, topLevelNode := range commentsTree {
+    for _, topLevelNode := range commentsResponse.Comments {
         generateTreeHtmlPreview(topLevelNode, &sb, 0)
     }
-    
+
     return sb.String()
 }

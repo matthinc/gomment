@@ -42,9 +42,11 @@ func commentsToTree(comments []model.Comment, parent int, depthLeft int) []model
     return tree
 }
 
-func (logic* BusinessLogic) GetCommentsTree(thread int, depth int, max int, offset int, tree int) []model.CommentTree {
+func (logic* BusinessLogic) GetCommentsTree(thread int, depth int, max int, offset int, tree int) model.CommentsResponse {
     comments := logic.GetComments(thread)
     trees := commentsToTree(comments, 0, depth)
+
+    total := len(trees)
 
     // Offset
     if len(trees) > offset {
@@ -58,5 +60,8 @@ func (logic* BusinessLogic) GetCommentsTree(thread int, depth int, max int, offs
         trees = trees[:max]
     }
 
-    return trees
+    return model.CommentsResponse{
+        Comments: trees,
+        Total: total,
+    }
 }
