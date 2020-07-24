@@ -33,7 +33,7 @@ function insertElement(type, className, parent, attributes = {}) {
   if (parent === undefined) {
     throw new Error('No valid parent element was provided.');
   }
-  
+
   const elem = document.createElement(type);
   elem.className = className;
   // Misc. attributes
@@ -55,13 +55,13 @@ export class Gomment {
     if (!options || typeof options !== 'object') {
       throw new Error('mandatory parameter `options` was not provided');
     }
-    
+
     // Required options
     /** @type {string} */
     this.apiURL = options.apiURL;
     // append a missing trailing backslash
     this.apiURL = this.apiURL.endsWith('/') ? this.apiURL : `${this.apiURL}/`;
-    
+
     /** @type {string} */
     this.thread = options.thread;
 
@@ -80,8 +80,13 @@ export class Gomment {
       placeholder_email: 'E-Mail',
       placeholder_text: 'Your comment',
       submit: 'Submit',
+      submit_reply: 'Reply',
       show_more: 'Load more comments',
       show_more_depth: 'Load more replies',
+      alert_missing_information: 'Please fill out all required fields!',
+      reply: 'Reply',
+      new_comment: 'Submit as new comment',
+      reply_to: 'Reply to ',
       /** @type {(date: Date) => string} */
       format_date: (date) => `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
     };
@@ -139,6 +144,14 @@ export class Gomment {
   }
 
   /**
+   * Reload comments with current parameters
+   * @returns {void}
+   */
+  reloadComments() {
+    this.loadComments(this.lastOffset, this.batchSize, this.maxDepth);
+  }
+
+  /**
    * Load 'more' comments.
    * @returns {void}
    */
@@ -165,10 +178,29 @@ export class Gomment {
    * @returns {void}
    */
   renderComment(parent, comment, treeIndex, depth) {
-    const commentElement = insertElement('div', 'gomment-comment', parent);
+    const sanitized = comment.comment.text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;")
+    // Allow newlines
+          .replace(/\n/g, '<br />');
+
+    const setReply = () => {
+      this.changeRecipient(comment.comment.comment_id, comment.comment.author);
+    };
+
+    let commentClass = 'gomment-comment';
+    if (comment.comment.comment_id === this.newComment) {
+      commentClass += ' gomment-comment-new';
+    }
+
+    const commentElement = insertElement('div', commentClass, parent);
     insertElement('div', 'gomment-comment-author', commentElement, { innerHTML: comment.comment.author });
     insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: this.i18n.format_date(new Date(comment.comment.created_at)) });
-    insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: comment.comment.text });
+    insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: sanitized });
+    insertElement('a', 'gomment-comment-reply', commentElement, { innerHTML: this.i18n.reply, onclick: setReply });
     const childrenElement = insertElement('div', 'gomment-comment-children', commentElement);
 
     if (comment.children) {
@@ -198,7 +230,7 @@ export class Gomment {
     }
     /** @type {HTMLElement} */
     const ce = this.commentsElement;
-    
+
     ce.innerHTML = '';
 
     // Render comments
@@ -210,6 +242,54 @@ export class Gomment {
         innerHTML: this.i18n.show_more,
         onclick: () => this.loadNextBatch()
       });
+    }
+  }
+
+  /**
+   * Publish new comment to this thread
+   * @param {number} parent - parent comment (0 = top-level)
+   * @param {string} name
+   * @param {string} email
+   * @param {string} content - text content
+   * @returns {void}
+   */
+  publishComment(parent, name, email, content) {
+    if (name && email && content) {
+      const data = {
+        author: name,
+        email,
+        text: content,
+        parent_id: parent,
+        thread_id: this.thread
+      };
+
+      // Post comment
+      window.fetch(`${this.apiURL}comment`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(data => {
+          this.newComment = data.id;
+          this.reloadComments();
+        });
+
+    } else {
+      alert(this.i18n.alert_missing_information);
+    }
+  }
+
+  changeRecipient(parent, name) {
+    this.replyRecipient = parent;
+
+    if (parent === 0) {
+      this.submitButton.innerHTML = this.i18n.submit;
+      this.replyIndicator.innerHTML = this.i18n.new_comment;
+      this.newButton.hidden = true;
+    } else {
+      this.submitButton.innerHTML = this.i18n.submit_reply;
+      this.replyIndicator.innerHTML = this.i18n.reply_to + `<span class="gomment-reply-recipient">${name}<span/>`;
+      this.newButton.hidden = false;
     }
   }
 
@@ -231,7 +311,7 @@ export class Gomment {
     } else {
       throw new Error('Parent element needs to be provided as a query selector or `HTMLElement`');
     }
-    
+
     // Create container element
     insertElement('div', 'gomment-title', container, { innerHTML: this.i18n.title });
 
@@ -239,10 +319,22 @@ export class Gomment {
     /** @type {HTMLElement} */
     const inputSection = insertElement('div', 'gomment-input-section', container);
     insertElement('div', 'gomment-input-title', inputSection, { innerHTML: this.i18n.input_title });
-    insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email });
-    insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name });
-    insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text });
-    insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: this.i18n.submit });
+    const mailElement = insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email });
+    const nameElement = insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name });
+    const contentElement = insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text });
+
+    const publish = () => {
+      const recipient = this.replyRecipient || 0;
+      this.publishComment(recipient, nameElement.value, mailElement.value, contentElement.value);
+      // Clear inputs
+      mailElement.value = '';
+      nameElement.value = '';
+      contentElement.value = '';
+    };
+
+    this.replyIndicator = insertElement('div', 'gomment-reply', inputSection, { innerHTML: this.i18n.new_comment });
+    this.submitButton = insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: this.i18n.submit, onclick: publish});
+    this.newButton = insertElement('a', 'gomment-submit-new', inputSection, { innerHTML: this.i18n.new_comment, onclick: () => { this.changeRecipient(0, ''); }, hidden: true });
 
     // Comments section
     this.commentsElement = insertElement('div', 'gomment-comments', container);

@@ -31,10 +31,30 @@
     background-color: #00bbff;
     color: white;
     border: none;
+    cursor: pointer;
+    margin-right: 10px;
 }
 
 .gomment > .gomment-input-section > input:focus {
     border: 1px solid #00bbff;
+}
+
+.gomment > .gomment-input-section > .gomment-submit-new {
+    color: #002561;
+    font-size: 12px;
+    margin-top: 5px;
+    cursor: pointer;
+    text-decoration: underline
+}
+
+.gomment > .gomment-input-section > .gomment-reply {
+    margin-top: 5px;
+    font-size: 12px;
+}
+
+.gomment > .gomment-input-section > .gomment-reply > .gomment-reply-recipient {
+    font-weight: bold;
+    color: #00bbff;
 }
 
 .gomment > .gomment-input-section > textarea {
@@ -61,6 +81,12 @@
     padding: 15px 0px 0px 20px;
 }
 
+.gomment-comment-new {
+    border-left: 5px solid  #d6ffe1;
+    margin: 10px;
+    padding-top: 0;
+}
+
 .gomment-comment > .gomment-comment-date {
     display: inline;
     font-style: italic;
@@ -79,6 +105,18 @@
 .gomment-comment > .gomment-comment-text {
     padding-top: 5px;
     font-size: 14px
+}
+
+.gomment-comment > .gomment-comment-reply {
+    display: inline-block;
+    color: #002561;
+    font-size: 12px;
+    margin-top: 5px;
+    cursor: pointer;
+}
+
+.gomment-comment > .gomment-comment-reply:hover {
+    text-decoration: underline;
 }
 
 .gomment-comment > .gomment-comment-children {
