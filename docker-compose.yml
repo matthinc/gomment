@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+    gomment:
+        container_name: gomment
+        build: .
+        ports:
+        - 8000:8000
+        volumes:
+        - ./docker_db:/opt/db
