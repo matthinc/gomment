@@ -15,8 +15,15 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
     if err != nil {
         fmt.Println(err)
     }
-    logic.AddComment(&comment)
-    c.String(http.StatusOK, "ok")
+
+    var result struct {
+        Id int64 `json:"id"`
+    }
+
+    result.Id = logic.AddComment(&comment)
+
+    resultJson, _ := json.Marshal(result)
+    c.String(http.StatusOK, string(resultJson))
 }
 
 func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
@@ -46,5 +53,3 @@ func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
         c.String(http.StatusOK, preview)
     }
 }
-
-

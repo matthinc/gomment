@@ -41,19 +41,21 @@ func (db* DB) Setup() (err error) {
 	return nil
 }
 
-func (db *DB)  AddComment(comment* model.Comment) error {
-    _, err := db.database.Exec(
+func (db *DB)  AddComment(comment* model.Comment) (int64, error) {
+    result, err := db.database.Exec(
         "INSERT INTO `comment` (text, author, email, thread_id, parent_id,created_at) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)",
         comment.Text,
         comment.Author,
         comment.Email,
         comment.ThreadId,
         comment.ParentId)
-    return err
+
+    id, _ := result.LastInsertId()
+    return id, err
 }
 
 func (db *DB) QueryComments(thread int) []model.Comment {
-    rows, _ := db.database.Query("SELECT comment_id, parent_id, created_at, author, text FROM `comment` where thread_id = ?", thread)
+    rows, _ := db.database.Query("SELECT comment_id, parent_id, created_at, author, text FROM `comment` where thread_id = ? ORDER BY created_at DESC", thread)
     defer rows.Close()
 
     response := make([]model.Comment, 0)
