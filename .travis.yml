@@ -7,4 +7,5 @@ before_install:
   - docker build -t matthinc/gomment-test -f test.Dockerfile .
 
 script:
+  - docker run --rm -it matthinc/gomment-test make tsc
   - docker run --rm -it matthinc/gomment-test make test

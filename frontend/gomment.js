@@ -8,6 +8,7 @@
 /**
  * Content of a single comment.
  * @typedef {Object} CommentData
+ * @property {number} comment_id Unique identifier for the comment.
  * @property {string} author The author of the comment.
  * @property {number} created_at Creation date of the comment.
  * @property {string} text The content of the comment.
@@ -98,6 +99,12 @@ export class Gomment {
     this.lastOffset = 0;
     /** @type {HTMLElement | null} */
     this.commentsElement = null;
+    /** @type {HTMLElement | null} */
+    this.submitButton = null;
+    /** @type {HTMLElement | null} */
+    this.replyIndicator = null;
+    /** @type {HTMLElement | null} */
+    this.newButton = null;
   }
 
   /**
@@ -279,7 +286,17 @@ export class Gomment {
     }
   }
 
+  /**
+   * Set the parent comment for the current input.
+   * @param {number} parent - parent comment (0 = top-level)
+   * @param {string} name - author of the recipient comment
+   * @returns {void}
+   */
   changeRecipient(parent, name) {
+    if(this.submitButton === null || this.replyIndicator === null || this.newButton === null) {
+      throw new Error('Gomment instance not injected yet');
+    }
+
     this.replyRecipient = parent;
 
     if (parent === 0) {
@@ -319,9 +336,9 @@ export class Gomment {
     /** @type {HTMLElement} */
     const inputSection = insertElement('div', 'gomment-input-section', container);
     insertElement('div', 'gomment-input-title', inputSection, { innerHTML: this.i18n.input_title });
-    const mailElement = insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email });
-    const nameElement = insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name });
-    const contentElement = insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text });
+    const mailElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email }));
+    const nameElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name }));
+    const contentElement = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text }));
 
     const publish = () => {
       const recipient = this.replyRecipient || 0;
