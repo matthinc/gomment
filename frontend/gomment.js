@@ -55,8 +55,10 @@ function defaultDateTransformer(date) {
   const now = new Date();
 
   // Difference in days
-  const diff = Math.floor(Math.abs(now - date) / (1000 * 60 * 60 * 24));
+  /** @type {number} */
+  const diff = Math.floor(Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
 
+  // @ts-ignore - error TS2339: Property 'padStart' does not exist on type 'string'.
   const timeString = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
 
   if (diff === 0) {
@@ -67,6 +69,7 @@ function defaultDateTransformer(date) {
     return `Yesterday ${timeString}`;
   }
 
+  // @ts-ignore - error TS2339: Property 'padStart' does not exist on type 'string'.
   return `${date.getFullYear()}.${String(date.getMonth()).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${timeString}`;
 }
 
@@ -322,9 +325,9 @@ export class Gomment {
     // Create new
     if (!this.inputSection) {
       const inputSection = insertElement('div', 'gomment-input-section', parent);
-      const mailElement = insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email });
-      const nameElement = insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name });
-      const contentElement = insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text });
+      const mailElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email }));
+      const nameElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name }));
+      const contentElement = /** @type {HTMLInputElement} */ (insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text }));
 
       const publish = () => {
         const recipient = this.replyRecipient || 0;
