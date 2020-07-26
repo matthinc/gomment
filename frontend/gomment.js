@@ -46,6 +46,30 @@ function insertElement(type, className, parent, attributes = {}) {
   return elem;
 }
 
+/**
+* Transforms a date to a string that will be shown next to the username
+* @param {Date} date - the date
+* @returns {string}
+*/
+function defaultDateTransformer(date) {
+  const now = new Date();
+
+  // Difference in days
+  const diff = Math.floor(Math.abs(now - date) / (1000 * 60 * 60 * 24));
+
+  const timeString = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+
+  if (diff === 0) {
+    return `Today ${timeString}`;
+  }
+
+  if (diff === 1) {
+    return `Yesterday ${timeString}`;
+  }
+
+  return `${date.getFullYear()}.${String(date.getMonth()).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${timeString}`;
+}
+
 export class Gomment {
 
   /**
@@ -76,7 +100,6 @@ export class Gomment {
     this.i18n = options.i18n || {
       title: 'Comments',
       empty: 'No comments',
-      input_title: 'Leave a comment:',
       placeholder_name: 'Name',
       placeholder_email: 'E-Mail',
       placeholder_text: 'Your comment',
@@ -86,10 +109,9 @@ export class Gomment {
       show_more_depth: 'Load more replies',
       alert_missing_information: 'Please fill out all required fields!',
       reply: 'Reply',
-      new_comment: 'Submit as new comment',
-      reply_to: 'Reply to ',
+      new_comment: 'Write comment',
       /** @type {(date: Date) => string} */
-      format_date: (date) => `${date.getFullYear()}.${date.getMonth()}.${date.getDate()} ${date.getHours()}:${date.getMinutes()}`
+      format_date: defaultDateTransformer
     };
 
     // stateful information
@@ -194,10 +216,6 @@ export class Gomment {
     // Allow newlines
           .replace(/\n/g, '<br />');
 
-    const setReply = () => {
-      this.changeRecipient(comment.comment.comment_id, comment.comment.author);
-    };
-
     let commentClass = 'gomment-comment';
     if (comment.comment.comment_id === this.newComment) {
       commentClass += ' gomment-comment-new';
@@ -207,8 +225,14 @@ export class Gomment {
     insertElement('div', 'gomment-comment-author', commentElement, { innerHTML: comment.comment.author });
     insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: this.i18n.format_date(new Date(comment.comment.created_at)) });
     insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: sanitized });
-    insertElement('a', 'gomment-comment-reply', commentElement, { innerHTML: this.i18n.reply, onclick: setReply });
+
+    const replyButton = insertElement('a', 'gomment-comment-reply', commentElement, { innerHTML: this.i18n.reply });
+
     const childrenElement = insertElement('div', 'gomment-comment-children', commentElement);
+
+    replyButton.onclick = () => {
+      this.moveCommentTarget(childrenElement, comment.comment.comment_id);
+    };
 
     if (comment.children) {
       for (const childComment of comment.children) {
@@ -287,26 +311,41 @@ export class Gomment {
   }
 
   /**
-   * Set the parent comment for the current input.
-   * @param {number} parent - parent comment (0 = top-level)
-   * @param {string} name - author of the recipient comment
-   * @returns {void}
+   * Move comment input to new parent and change recipient
+   * @param {HTMLElement} parent - new parent
+   * @param {number} recipient - new recipient (0 for top-level comments)
    */
-  changeRecipient(parent, name) {
-    if(this.submitButton === null || this.replyIndicator === null || this.newButton === null) {
-      throw new Error('Gomment instance not injected yet');
+  moveCommentTarget(parent, recipient) {
+    // Set recipient
+    this.replyRecipient = recipient;
+
+    // Create new
+    if (!this.inputSection) {
+      const inputSection = insertElement('div', 'gomment-input-section', parent);
+      const mailElement = insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email });
+      const nameElement = insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name });
+      const contentElement = insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text });
+
+      const publish = () => {
+        const recipient = this.replyRecipient || 0;
+        this.publishComment(recipient, nameElement.value, mailElement.value, contentElement.value);
+        // Clear inputs
+        mailElement.value = '';
+        nameElement.value = '';
+        contentElement.value = '';
+      };
+
+      insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: this.i18n.submit, onclick: publish});
+
+      // Cache
+      this.inputSection = inputSection;
     }
 
-    this.replyRecipient = parent;
-
-    if (parent === 0) {
-      this.submitButton.innerHTML = this.i18n.submit;
-      this.replyIndicator.innerHTML = this.i18n.new_comment;
-      this.newButton.hidden = true;
+    // Move
+    if (parent.childNodes.length === 0) {
+      parent.appendChild(this.inputSection);
     } else {
-      this.submitButton.innerHTML = this.i18n.submit_reply;
-      this.replyIndicator.innerHTML = this.i18n.reply_to + `<span class="gomment-reply-recipient">${name}<span/>`;
-      this.newButton.hidden = false;
+      parent.insertBefore(this.inputSection, parent.childNodes[0]);
     }
   }
 
@@ -332,26 +371,14 @@ export class Gomment {
     // Create container element
     insertElement('div', 'gomment-title', container, { innerHTML: this.i18n.title });
 
-    // Comment input section
-    /** @type {HTMLElement} */
-    const inputSection = insertElement('div', 'gomment-input-section', container);
-    insertElement('div', 'gomment-input-title', inputSection, { innerHTML: this.i18n.input_title });
-    const mailElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email }));
-    const nameElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name }));
-    const contentElement = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text }));
+    // New comment button
+    const inputContainer = insertElement('div', 'gomment-new-comment-input-container', container);
 
-    const publish = () => {
-      const recipient = this.replyRecipient || 0;
-      this.publishComment(recipient, nameElement.value, mailElement.value, contentElement.value);
-      // Clear inputs
-      mailElement.value = '';
-      nameElement.value = '';
-      contentElement.value = '';
+    const newComment = () => {
+      this.moveCommentTarget(inputContainer, 0);
     };
 
-    this.replyIndicator = insertElement('div', 'gomment-reply', inputSection, { innerHTML: this.i18n.new_comment });
-    this.submitButton = insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: this.i18n.submit, onclick: publish});
-    this.newButton = insertElement('a', 'gomment-submit-new', inputSection, { innerHTML: this.i18n.new_comment, onclick: () => { this.changeRecipient(0, ''); }, hidden: true });
+    insertElement('button', 'gomment-new-comment', inputContainer, { innerHTML: this.i18n.new_comment, onclick: newComment });
 
     // Comments section
     this.commentsElement = insertElement('div', 'gomment-comments', container);

@@ -11,12 +11,32 @@
     font-weight: 700;
 }
 
-.gomment > .gomment-input-section {
-    padding: 20px;
-    border-bottom: 1px solid #bebebe;
+.gomment > .gomment-new-comment-input-container {
+
 }
 
-.gomment > .gomment-input-section > input {
+.gomment > .gomment-new-comment-input-container > .gomment-new-comment {
+    margin-top: 5px;
+    padding: 7px 15px 7px 15px;
+    background-color: #00bbff;
+    color: white;
+    border: none;
+    cursor: pointer;
+    margin-right: 10px;
+    margin-left: 20px;
+}
+
+.gomment-input-section {
+    display: block;
+    border: 1px solid #bebebe;
+    margin-top: 10px;
+    margin-left: 20px;
+    padding: 10px;
+    width: 600px;
+    max-width: calc(100% - 20px);
+}
+
+.gomment-input-section > input {
     display: block;
     width: 100%;
     max-width: 300px;
@@ -25,7 +45,7 @@
     padding: 5px 7px 5px 7px;
 }
 
-.gomment > .gomment-input-section > button {
+.gomment-input-section > button {
     margin-top: 5px;
     padding: 7px 15px 7px 15px;
     background-color: #00bbff;
@@ -35,29 +55,21 @@
     margin-right: 10px;
 }
 
-.gomment > .gomment-input-section > input:focus {
+.gomment-input-section > input:focus {
     border: 1px solid #00bbff;
 }
 
-.gomment > .gomment-input-section > .gomment-submit-new {
-    color: #002561;
-    font-size: 12px;
-    margin-top: 5px;
-    cursor: pointer;
-    text-decoration: underline
-}
-
-.gomment > .gomment-input-section > .gomment-reply {
+.gomment-input-section > .gomment-reply {
     margin-top: 5px;
     font-size: 12px;
 }
 
-.gomment > .gomment-input-section > .gomment-reply > .gomment-reply-recipient {
+.gomment-input-section > .gomment-reply > .gomment-reply-recipient {
     font-weight: bold;
     color: #00bbff;
 }
 
-.gomment > .gomment-input-section > textarea {
+.gomment-input-section > textarea {
     display: block;
     width: 100%;
     max-width: 500px;
@@ -66,7 +78,7 @@
     padding: 5px;
 }
 
-.gomment > .gomment-input-section > textarea:focus {
+.gomment-input-section > textarea:focus {
     border: 1px solid #00bbff;
 }
 
@@ -79,6 +91,7 @@
 
 .gomment-comment {
     padding: 15px 0px 0px 20px;
+    max-width: 700px;
 }
 
 .gomment-comment-new {
@@ -89,9 +102,8 @@
 
 .gomment-comment > .gomment-comment-date {
     display: inline;
-    font-style: italic;
-    font-size: 11px;
-    margin-left: 5px;
+    font-size: 12px;
+    margin-left: 10px;
     color: #555555;
 }
 
@@ -99,7 +111,7 @@
     display: inline;
     color: black;
     font-weight: bold;
-    font-size: 12px
+    font-size: 14px
 }
 
 .gomment-comment > .gomment-comment-text {
@@ -122,7 +134,7 @@
 .gomment-comment > .gomment-comment-children {
     margin-top: 5px;
     padding-left: 5px;
-    border-left: 1px dashed #bebebe;
+    border-left: 5px solid #bebebe;
 }
 
 .gomment-comment > .gomment-comment-children > .gomment-show-more-depth-button {
