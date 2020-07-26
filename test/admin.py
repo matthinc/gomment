@@ -27,8 +27,10 @@ class TestAdmin(TestBase):
         data = response.json()
         self.assertEqual(response.status_code, 200)
         self.assertEqual(data['status'], 'success')
-        self.assertIsInstance(data['session_id'], str)
-        self.assertGreater(len(data['session_id']), 10)
+
+        sessionCookie = response.cookies.get('GOMMENT_SID')
+        self.assertIsInstance(sessionCookie, str)
+        self.assertGreater(len(sessionCookie), 10)
 
         valid_until = data['valid_until']
         self.assertIsInstance(valid_until, str)
@@ -43,9 +45,10 @@ class TestAdmin(TestBase):
         self.assertEqual(r.status_code, 401)
         
     def test_admin_threads(self):
-        session_id = self.adminLogin().json()['session_id']
-        r = requests.get(EP + '/admin/threads', headers={
-            'Authorization': 'Bearer ' + session_id
+        sessionCookie = self.adminLogin().cookies.get('GOMMENT_SID')
+        
+        r = requests.get(EP + '/admin/threads', cookies={
+            'GOMMENT_SID': sessionCookie
         })
         threads = r.json()
         self.assertEqual(r.status_code, 200)

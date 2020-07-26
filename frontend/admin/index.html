@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomment Admin</title>
+  </head>
+  <body>
+    <h1>Gomment Admin</h1>
+    <h2>Comments</h2>
+    <table id="comment-table">
+      <thead>
+	<tr>
+	  <th>URL</th>
+	  <th>Timestamp</th>
+	  <th>Name</th>
+	  <th>Email</th>
+	  <th>Comment</th>
+	  <th>Action</th>
+	</tr>
+      </thead>
+      <tbody>
+	<tr>
+	  <td><pre>/posts/how-to-do-stuff</pre></td>
+	  <td><time>2020-08-14 13:44:12</time></td>
+	  <td>Josef</td>
+	  <td>josi@lumbernumber.de</td>
+	  <td>That was a wonderful blog post!</td>
+	  <td><a href="#">Delete</a> | <a href="#">Edit</a></td>
+	</tr>
+      </tbody>
+    </table>
+    <script type="module">
+     import {GommentAdmin} from './gomment-admin.js';
+
+     new GommentAdmin().injectInto({
+	 commentTable: '#comment-table'
+     });
+    </script>
+  </body>
+</html>
