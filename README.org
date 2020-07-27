@@ -1,13 +1,33 @@
 * gomment - A simple comment microservice using Go and Docker
  [[https://api.travis-ci.com/matthinc/gomment.svg?branch=master]]
 
- The main goal of this project is to create a small and lightweight comment system for any
- kind of website or app (and to learn Go).
-** Planned features:
-   - [ ] PostgreSQL or SQLite backend
-   - [ ] Nesting comments (Reddit style)
-   - [ ] Publish comments after review
-   - [ ] API for creating/listing comments
-   - [ ] Optional: GDPR compliance
-   - [ ] Optional: E-Mail notifications
-   - [ ] Optional: Captchas
+** Why gomment?
+- *Lighweight* - The docker image is < 30MB, the JavaScript file is < 20kB
+- *Fast* - Native performance thanks to go
+- *Frontend-agnostic* - Use the default JavaScript frontend or build your own using the *gomment REST-API*
+- *Container-first* - gomment was built with *Docker* in mind from the first second
+- *Portable* - gomment uses a single SQLite file as its database
+
+** Demo
+https://gomment.mrupp.eu/static/demo.html
+
+This demo always shows the latest development state and uses the built-in JavaScript frontend.
+
+** Embedding
+
+#+BEGIN_SRC html
+<!-- gomment will be injected into this element -->
+<div id="comments"></div>
+
+<script type="module">
+ import {Gomment} from './gomment.js';
+
+ new Gomment({
+     apiURL: '/',
+     thread: 0
+ }).injectInto('#comments');
+</script>
+#+END_SRC
+
+** Progress
+Gomment is currently WIP and not ready for production.
