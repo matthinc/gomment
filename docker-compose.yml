@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
     gomment:
+        image: matthinc/gomment:devel
         container_name: gomment
         build: .
         ports:
