@@ -338,6 +338,11 @@ export class Gomment {
     } else {
       parent.insertBefore(this.inputSection, parent.childNodes[0]);
     }
+
+    // Hide new comment button
+    if (this.newCommentButton) {
+      this.newCommentButton.hidden = recipient === 0;
+    }
   }
 
   /**
@@ -365,11 +370,11 @@ export class Gomment {
     // New comment button
     const inputContainer = insertElement('div', 'gomment-new-comment-input-container', container);
 
-    const newComment = () => {
+    this.newCommentButton = insertElement('button', 'gomment-new-comment', inputContainer, { innerHTML: this.i18n.new_comment});
+
+    this.newCommentButton.onclick = () => {
       this.moveCommentTarget(inputContainer, 0);
     };
-
-    insertElement('button', 'gomment-new-comment', inputContainer, { innerHTML: this.i18n.new_comment, onclick: newComment });
 
     // Comments section
     this.commentsElement = insertElement('div', 'gomment-comments', container);

@@ -11,10 +11,6 @@
     font-weight: 700;
 }
 
-.gomment > .gomment-new-comment-input-container {
-
-}
-
 .gomment > .gomment-new-comment-input-container > .gomment-new-comment {
     margin-top: 5px;
     padding: 7px 15px 7px 15px;
@@ -94,12 +90,6 @@
     max-width: 700px;
 }
 
-.gomment-comment-new {
-    border-left: 5px solid  #d6ffe1;
-    margin: 10px;
-    padding-top: 0;
-}
-
 .gomment-comment > .gomment-comment-date {
     display: inline;
     font-size: 12px;
@@ -134,7 +124,7 @@
 .gomment-comment > .gomment-comment-children {
     margin-top: 5px;
     padding-left: 5px;
-    border-left: 5px solid #bebebe;
+    border-left: 5px solid #e0e0e0;
 }
 
 .gomment-comment > .gomment-comment-children > .gomment-show-more-depth-button {
