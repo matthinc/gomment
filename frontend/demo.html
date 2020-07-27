@@ -1,14 +1,27 @@
 <html>
   <head>
-    <link rel="stylesheet" href="themes/default.css">
+      <link rel="stylesheet" href="themes/default.css">
+      <style>
+          h2 {
+              font-family: 'Arial';
+          }
+          body {
+              background-color: #eeeeee;
+          }
+          main {
+              margin: 0 auto;
+              max-width: 900px;
+              background-color: white;
+              padding: 20px;
+          }
+      </style>
   </head>
   <body>
-    <h2>Gomment demo</h2>
+      <main>
+          <h2>Gomment demo</h2>
 
-    <p>Site-content</p>
-    <p>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>
-
-    <div id="comments"></div>
+          <div id="comments"></div>
+      </main>
 
     <script type="module">
      import {Gomment} from './gomment.js';

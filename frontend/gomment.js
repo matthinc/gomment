@@ -376,6 +376,9 @@ export class Gomment {
       this.moveCommentTarget(inputContainer, 0);
     };
 
+    // Initial input field position
+    this.moveCommentTarget(inputContainer, 0);
+
     // Comments section
     this.commentsElement = insertElement('div', 'gomment-comments', container);
 
