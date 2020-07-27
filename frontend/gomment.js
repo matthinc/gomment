@@ -54,20 +54,8 @@ function insertElement(type, className, parent, attributes = {}) {
 function defaultDateTransformer(date) {
   const now = new Date();
 
-  // Difference in days
-  /** @type {number} */
-  const diff = Math.floor(Math.abs(now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
   // @ts-ignore - error TS2339: Property 'padStart' does not exist on type 'string'.
   const timeString = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-
-  if (diff === 0) {
-    return `Today ${timeString}`;
-  }
-
-  if (diff === 1) {
-    return `Yesterday ${timeString}`;
-  }
 
   // @ts-ignore - error TS2339: Property 'padStart' does not exist on type 'string'.
   return `${date.getFullYear()}.${String(date.getMonth()).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${timeString}`;
