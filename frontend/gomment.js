@@ -273,7 +273,7 @@ export class Gomment {
    * @param {string} name
    * @param {string} email
    * @param {string} content - text content
-   * @returns {void}
+   * @returns {boolean} true if data was valid
    */
   publishComment(parent, name, email, content) {
     if (name && email && content) {
@@ -298,7 +298,10 @@ export class Gomment {
 
     } else {
       alert(this.i18n.alert_missing_information);
+      return false;
     }
+
+    return true;
   }
 
   /**
@@ -319,11 +322,12 @@ export class Gomment {
 
       const publish = () => {
         const recipient = this.replyRecipient || 0;
-        this.publishComment(recipient, nameElement.value, mailElement.value, contentElement.value);
-        // Clear inputs
-        mailElement.value = '';
-        nameElement.value = '';
-        contentElement.value = '';
+        if (this.publishComment(recipient, nameElement.value, mailElement.value, contentElement.value)) {
+          // Clear inputs
+          mailElement.value = '';
+          nameElement.value = '';
+          contentElement.value = '';
+        }
       };
 
       insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: this.i18n.submit, onclick: publish});
