@@ -198,15 +198,6 @@ export class Gomment {
    * @returns {void}
    */
   renderComment(parent, comment, treeIndex, depth) {
-    const sanitized = comment.comment.text
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;")
-    // Allow newlines
-          .replace(/\n/g, '<br />');
-
     let commentClass = 'gomment-comment';
     if (comment.comment.comment_id === this.newComment) {
       commentClass += ' gomment-comment-new';
@@ -215,7 +206,7 @@ export class Gomment {
     const commentElement = insertElement('div', commentClass, parent);
     insertElement('div', 'gomment-comment-author', commentElement, { innerHTML: comment.comment.author });
     insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: this.i18n.format_date(new Date(comment.comment.created_at)) });
-    insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: sanitized });
+    insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: comment.comment.text });
 
     const replyButton = insertElement('a', 'gomment-comment-reply', commentElement, { innerHTML: this.i18n.reply });
 

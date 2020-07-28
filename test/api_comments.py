@@ -92,3 +92,12 @@ class ApiCommentsTest(TestBase):
         response = requests.get(EP + '/comments?thread=0&depth=0')
         json = response.json()["comments"]
         self.assertEqual(json[1]['has_children'], True)
+
+    def test_sanitize(self):
+        self.postComment("<i>XSS</i>", "user1@mail.com", "<script>alert('XSS');</script>", 0, 0)
+
+        response = requests.get(EP + '/comments?thread=0&depth=0&max=2')
+
+        json = response.json()["comments"]
+        self.assertEqual(json[0]['comment']['text'], "&lt;script&gt;alert(&#39;XSS&#39;);&lt;/script&gt;")
+        self.assertEqual(json[0]['comment']['author'], "&lt;i&gt;XSS&lt;/i&gt;")
