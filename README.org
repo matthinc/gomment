@@ -1,5 +1,6 @@
 * gomment - A simple comment microservice using Go and Docker
  [[https://api.travis-ci.com/matthinc/gomment.svg?branch=master]]
+ [[https://img.shields.io/docker/image-size/matthinc/gomment.svg]]
 
 ** Why gomment?
 - *Lighweight* - The docker image is < 30MB, the JavaScript file is < 20kB
