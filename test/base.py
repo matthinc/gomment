@@ -7,7 +7,7 @@ import requests
 
 DB_PATH = './test.db'
 PW_HASH = '$argon2id$v=19$m=65536,t=1,p=4$g3QbUxJU0fxr3M0BLywjjA$IWXFuQOX8jZxtcFhN8VuaCAIAQPRbXtxkSRn1wVgkXw'
-EP = 'http://localhost:8000'
+EP = 'http://localhost:8000/api/v1'
 
 class TestBase(unittest.TestCase):
     

@@ -1,3 +1,6 @@
+ts-check := tsc --allowJs --checkJs --noEmit --target ES6 --strict
+
+.PHONY: build
 build:
 	go build
 
@@ -7,4 +10,5 @@ test: build
 
 .PHONY: tsc
 tsc:
-	tsc --allowJs --checkJs --noEmit --target ES6 --strict frontend/gomment.js
+	$(ts-check) frontend/gomment.js
+	$(ts-check) frontend/admin/gomment-admin.js

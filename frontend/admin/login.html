@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gomment Admin - Login</title>
+  </head>
+  <body>
+    <h1>Gomment Admin - Login</h1>
+    <label for="password">Password</label>
+    <input id="password" type="password" name="password" />
+    <button id="login">Login</button>
+    
+    <script type="application/javascript">
+     const passwordInput = document.getElementById('password');
+     const loginButton = document.getElementById('login');
+     
+     loginButton.addEventListener('click', (e) => {
+	 const loginValues = {
+	     password: passwordInput.value,
+	 };
+	 
+	 window.fetch(`/api/v1/admin/login`, {
+	     method: 'POST',
+	     cache: 'no-cache',
+	     headers: {
+		 'Content-Type': 'application/json',
+		 'Accept': 'application/json',
+	     },
+	     body: JSON.stringify(loginValues),
+	 }).then((res) => {
+	     if(res.ok) {
+		 window.location = '/admin';
+	     } else {
+		 console.log('err', res);		 
+	     }
+	 }).catch((err) => {
+	     console.log('network errror');
+	 })
+     });
+    </script>
+  </body>
+</html>
