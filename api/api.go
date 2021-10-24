@@ -65,10 +65,17 @@ func adminJsonMiddleware(routeHandler routeHandlerType, logic *logic.BusinessLog
 	}
 }
 
+func redirectWithPrefix(c *gin.Context, destination string) {
+	if prefix := c.Request.Header.Get("X-Forwarded-Prefix"); len(prefix) > 0 {
+		destination = prefix + "/" + destination
+	}
+	c.Redirect(http.StatusTemporaryRedirect, destination)
+}
+
 func adminRedirectMiddleware(logic *logic.BusinessLogic) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !isAdmin(c, logic) {
-			c.Redirect(http.StatusTemporaryRedirect, "/login")
+			redirectWithPrefix(c, "/login")
 			c.Abort()
 		}
 	}
