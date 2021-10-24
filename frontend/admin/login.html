@@ -20,7 +20,7 @@
 	     password: passwordInput.value,
 	 };
 	 
-	 window.fetch(`/api/v1/admin/login`, {
+	 window.fetch(`api/v1/admin/login`, {
 	     method: 'POST',
 	     cache: 'no-cache',
 	     headers: {
@@ -30,7 +30,7 @@
 	     body: JSON.stringify(loginValues),
 	 }).then((res) => {
 	     if(res.ok) {
-		 window.location = '/admin';
+		 window.location = 'admin';
 	     } else {
 		 console.log('err', res);		 
 	     }
