@@ -3,9 +3,10 @@ module github.com/matthinc/gomment
 go 1.14
 
 require (
-	github.com/gin-gonic/gin v1.5.0
-	github.com/lhecker/argon2 v2.0.0+incompatible // indirect
-	github.com/matthewhartstonge/argon2 v0.1.2
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
-	golang.org/x/crypto v0.0.0-20200320181102-891825fb96df
+	github.com/gin-gonic/gin v1.7.4 // indirect
+	github.com/matthewhartstonge/argon2 v0.1.5 // indirect
+	github.com/mattn/go-sqlite3 v1.14.9 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
+	gopkg.in/go-playground/assert.v1 v1.2.1 // indirect
+	gopkg.in/go-playground/validator.v9 v9.29.1 // indirect
 )
