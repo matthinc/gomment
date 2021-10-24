@@ -1,6 +1,6 @@
 <html>
   <head>
-      <link rel="stylesheet" href="themes/default.css">
+      <link rel="stylesheet" href="/gomment/static/themes/default.css">
       <style>
           h2 {
               font-family: 'Arial';
@@ -24,10 +24,10 @@
       </main>
 
     <script type="module">
-     import {Gomment} from './gomment.js';
+     import {Gomment} from '/gomment/static/gomment.js';
 
      new Gomment({
-         apiURL: '/api/v1/',
+         apiURL: '/gomment/api/v1/',
          thread: 0,
          batchSize: 7,
          maxDepth: 1
