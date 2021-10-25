@@ -1,27 +1,12 @@
 package logic
 
 import (
-    "html"
-
     "github.com/matthinc/gomment/model"
 )
 
-func sanitize(comment model.Comment) model.Comment {
-    comment.Author = html.EscapeString(comment.Author)
-    comment.Text = html.EscapeString(comment.Text)
-    comment.Email = html.EscapeString(comment.Email)
-
-    return comment
-}
 
 func (logic* BusinessLogic) GetComments(thread int) []model.Comment {
     comments := logic.DB.QueryComments(thread)
-
-    // Remove possibly malicious (XSS) characters
-    for index, comment := range comments {
-        comments[index] = sanitize(comment)
-    }
-
     return comments
 }
 
