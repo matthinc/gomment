@@ -1,0 +1,13 @@
+nav ul {
+    padding-left: 0;
+}
+
+nav ul li {
+    display: inline-block;
+    list-style: none;
+    padding: 0px 4px;
+}
+
+td {
+    padding: 0px 8px;
+}
