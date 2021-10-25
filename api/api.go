@@ -75,7 +75,7 @@ func redirectWithPrefix(c *gin.Context, destination string) {
 func adminRedirectMiddleware(logic *logic.BusinessLogic) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if !isAdmin(c, logic) {
-			redirectWithPrefix(c, "/login")
+			redirectWithPrefix(c, "/admin/login")
 			c.Abort()
 		}
 	}
@@ -93,17 +93,18 @@ func StartApi(logic *logic.BusinessLogic) {
 	v1.POST("/comment", injectLogic(routePostComment, logic))
 
 	if len(logic.PwHash) > 0 {
-		// enable admin routes
+		// enable admin API routes
 		v1.POST("/admin/login", injectLogic(routeAdminLogin, logic))
 		v1.GET("/admin/threads", adminJsonMiddleware(routeAdminThreads, logic))
+
+		// unauthenticated login route
+		router.StaticFile("/admin/login", "./frontend/admin/login.html")
+
+		// enable admin static routes
+		adminArea := router.Group("/admin")
+		adminArea.Use(adminRedirectMiddleware(logic))
+		adminArea.StaticFile("/", "./frontend/admin/index.html")
 	}
-
-	// static admin
-	router.StaticFile("/login", "./frontend/admin/login.html")
-
-	adminArea := router.Group("/admin")
-	adminArea.Use(adminRedirectMiddleware(logic))
-	adminArea.Static("/", "./frontend/admin")
 
 	router.Run(":8000")
 }
