@@ -9,34 +9,39 @@
   </head>
   <body>
     <h1>Gomment Admin</h1>
-    <h2>Comments</h2>
-    <table id="comment-table">
+    <nav><ul>
+      <li><a href="new">new</a></li>
+      <li><a href="urls">urls</a></li>
+      <li><a href="review">review</a></li>
+    </ul></nav>
+    <h2>Newest Comments</h2>
+    <table id="gomment-table">
       <thead>
-	<tr>
-	  <th>URL</th>
-	  <th>Timestamp</th>
-	  <th>Name</th>
-	  <th>Email</th>
-	  <th>Comment</th>
-	  <th>Action</th>
-	</tr>
+        <tr>
+          <th>URL</th>
+          <th>Timestamp</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Comment</th>
+          <th>Action</th>
+        </tr>
       </thead>
       <tbody>
-	<tr>
-	  <td><pre>/posts/how-to-do-stuff</pre></td>
-	  <td><time>2020-08-14 13:44:12</time></td>
-	  <td>Josef</td>
-	  <td>josi@lumbernumber.de</td>
-	  <td>That was a wonderful blog post!</td>
-	  <td><a href="#">Delete</a> | <a href="#">Edit</a></td>
-	</tr>
+        <tr>
+          <td><pre>/posts/how-to-do-stuff</pre></td>
+          <td><time datetime="2011-11-18T14:54:39.929Z">2011-11-18T14:54:39.929Z</time></td>
+          <td>Josef</td>
+          <td>josi@lumbernumber.de</td>
+          <td>That was a wonderful blog post!</td>
+          <td><a href="#">Delete</a> | <a href="#">Edit</a></td>
+        </tr>
       </tbody>
     </table>
     <script type="module">
      import {GommentAdmin} from './gomment-admin.js';
 
      new GommentAdmin().injectInto({
-	 commentTable: '#comment-table'
+       table: '#gomment-table'
      });
     </script>
   </body>

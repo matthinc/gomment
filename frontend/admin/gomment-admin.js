@@ -1,3 +1,14 @@
+/**
+ * Parse the time elment's `datetime` attribute and set the local datetime as innerHTML.
+ * @param {HTMLTimeElement} timeElement - the HTML time element to update
+ */
+function updateTimeElementToLocalTime(timeElement) {
+  const datetimeAttribute = timeElement.getAttribute('datetime');
+  if(typeof datetimeAttribute === 'string' && !!datetimeAttribute) {
+    timeElement.innerHTML = new Date(datetimeAttribute).toLocaleString();
+  }
+}
+
 export class GommentAdmin {
   /**
    * @constructor
@@ -23,13 +34,13 @@ export class GommentAdmin {
       this.table = options.table;
     }
 
-    this.render();
+    this.hydrate();
   }
 
   /**
-   * Render the table based on the current filters and settings.
+   * Hydrate the server-rendered DOM with JS.
    */
-  render() {
-
+  hydrate() {
+    this.table.querySelectorAll('time').forEach(timeEl => updateTimeElementToLocalTime(timeEl));
   }
 }
