@@ -30,6 +30,7 @@ func routeAdminLogin(c *gin.Context, l *logic.BusinessLogic) {
 		sessionId, sessionData, err = l.CreateSession()
 	}
 	if isValid && err == nil {
+		c.SetSameSite(http.SameSiteStrictMode)
 		c.SetCookie(AdminSid, sessionId, int(logic.SessionDuration.Seconds()), "", "", false, true)
 
 		c.JSON(http.StatusOK, gin.H{

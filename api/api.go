@@ -99,13 +99,13 @@ func StartApi(logic *logic.BusinessLogic) {
 
 		// unauthenticated login route
 		router.StaticFile("/admin/login", "./frontend/admin/login.html")
+		router.StaticFile("/admin/style.css", "./frontend/admin/style.css")
 
 		// enable admin static routes
 		adminArea := router.Group("/admin")
 		adminArea.Use(adminRedirectMiddleware(logic))
 		adminArea.StaticFile("/", "./frontend/admin/index.html")
 		adminArea.StaticFile("/gomment-admin.js", "./frontend/admin/gomment-admin.js")
-		adminArea.StaticFile("/style.css", "./frontend/admin/style.css")
 	}
 
 	router.Run(":8000")
