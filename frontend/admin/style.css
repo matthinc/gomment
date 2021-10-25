@@ -11,3 +11,11 @@ nav ul li {
 td {
     padding: 0px 8px;
 }
+
+.gmt__comment {
+    width: 450px;
+}
+
+.gmt__comment textarea {
+    width: 100%;
+}
