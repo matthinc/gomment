@@ -104,6 +104,7 @@ func StartApi(logic *logic.BusinessLogic) {
 		adminArea := router.Group("/admin")
 		adminArea.Use(adminRedirectMiddleware(logic))
 		adminArea.StaticFile("/", "./frontend/admin/index.html")
+		adminArea.StaticFile("/gomment-admin.js", "./frontend/admin/gomment-admin.js")
 	}
 
 	router.Run(":8000")
