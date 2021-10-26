@@ -19,3 +19,11 @@ td {
 .gmt__comment textarea {
     width: 100%;
 }
+
+.gmt__row {
+    transition: background-color 0.5s ease;
+}
+
+.gmt__row.loading {
+    background-color: #fff1c5;
+}
