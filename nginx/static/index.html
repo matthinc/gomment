@@ -1,5 +1,8 @@
 <html>
   <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=">
       <link rel="stylesheet" href="/gomment/static/themes/default.css">
       <style>
           h2 {
@@ -17,6 +20,7 @@
       </style>
   </head>
   <body>
+    <a href="/">Home</a> <a href="/post1#blablubb">Post1</a> <a href="/post2-why-animals-smell/">Post2</a> <a href="/flypagana.php?snowflakes=true">Post3</a>
       <main>
           <h2>Gomment demo</h2>
 
@@ -28,7 +32,6 @@
 
      new Gomment({
          apiURL: '/gomment/api/v1/',
-         thread: 0,
          batchSize: 7,
          maxDepth: 1
      }).injectInto('#comments');
