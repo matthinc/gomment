@@ -1,0 +1,68 @@
+#+STARTUP: indent
+* Comment Struct from API
+- comment_id
+- thread_id
+- parent_id
+- created_at
+- num_children (-1 means >0 children)
+- children: []
+** Facts
+- Parents are always created before their children
+* Retrieving Comments
+** "I want the newest 100 comments"
+*** Straightforward Soulution
+- SQL query with =ORDER BY created_at LIMIT ...=
+- Problem: Query result might be only leaf comments / some root comments might be missing
+  - Test-Case: Insert 1 root comment with 100 child comments, query tree of 100 last comments
+*** Query all root comments + 100 newest comments
+- SQL query with =SELECT ... WHERE parent_id = 0 OR comment_id IN (SELECT ... ORDER BY created_at ...)=
+- Problem: Possibly huge number of comments, parent comments might still be missing
+  - Test-Case: Check that every comment has a parent
+*** Recursive Solution
+- Select newest 100 comments, then recursive SQL query that loads the parents of the parents of ...
+- Problem?: Slow?, non-root comments "skip" comments between them
+  - Example: Load two newest comments (9 + 8), 3 is not loaded, but the older 2 is loaded => not really a problem
+    #+begin_example
+   1
+/  |  \
+2 (3) 4
+|  |  |
+9 (5) 8
+    #+end_example
+  - Test-Case: For each parent: check if unloaded comments between oldest loaded and youngest loaded child exist
+- Problem: How to calculate =num_children=
+  - Soulution: Store =num_children= in SQL on insert
+    #+begin_example sql
+BEGIN TRANSACTION;
+INSERT INTO `comment`(`thread_id`, `parent_id`, `created_at`, `author`, `email`, `text`) VALUES (1, 13, "2021-01-01 00:00:00", "foobar", "foobar@foo.bar", "you have been foood");
+UPDATE `comment` SET `num_children` = `num_children` + 1 WHERE `comment_id` = 13;
+COMMIT TRANSACTION;
+    #+end_example
+  - Test-Case: Check if =num_children= corresponds to the actual number of children
+    #+begin_example sql
+UPDATE `comment` AS c SET `num_children` = (SELECT COUNT(`comment_id`) FROM `comment` WHERE `parent_id` = c.`comment_id`);
+    #+end_example
+**** Loading more sibling comments
+- Client must specify all loaded siblings => =SELECT ... WHERE parent_id = bla AND comment_id NOT IN (...)=
+*** Propagating child insert dates
+- Get all ids of branch
+  #+begin_example sql
+WITH RECURSIVE `parents`(`parent_id`) AS (SELECT 17 UNION SELECT `comment`.`parent_id` FROM `comment`,`parents` where `comment_id` = `parents`.`parent_id`)
+SELECT `parent_id` from parents;
+  #+end_example
+- Update all ids
+  #+begin_example sql
+UPDATE `comment` SET `touched_at` = "2022-01-01 00:00:00" WHERE `comment_id` IN (
+  WITH RECURSIVE `parents`(`parent_id`) AS (SELECT 17 UNION SELECT `comment`.`parent_id` FROM `comment`,`parents` where `comment_id` = `parents`.`parent_id`)
+  SELECT `parent_id` from parents
+);
+  #+end_example
+- Select faster than recursive solution: =SELECT ... ORDER BY `touched_at` DESC LIMIT ...=
+- Problem: A branch (with the same `touched_at` date) is not loaded completely due to the =LIMIT= statement
+  - Solution: When loading incomplete branches with the same `touched_at` date, order parents first
+    - order parents first = =ORDER BY `created_at` ASC= => children get cut off => OK
+    - but before that sort and limit by =ORDER BY `touched_at` DESC, `created_at` ASC LIMIT=
+    - Impossible Corner case: Parent and child have the same date
+  - Test: No comment without parent
+**** Loading more sibling comments
+- Sibling comments can be older or younger (since ordered by =touched_at=)
