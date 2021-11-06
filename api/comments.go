@@ -7,12 +7,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/matthinc/gomment/logic"
 	"github.com/matthinc/gomment/model"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 	var commentCreation model.CommentCreation
 	err := c.BindJSON(&commentCreation)
 	if err != nil {
+		log.Info("routePostComment", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 		})
@@ -25,6 +28,7 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 
 	result.Id, err = logic.CreateComment(&commentCreation)
 	if err != nil {
+		log.Error("routePostComment", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})
@@ -39,7 +43,10 @@ func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
 	// Required thread parameter
 	threadPath, err := getStringQueryParameter(c, "threadPath")
 	if err != nil {
-		c.String(http.StatusBadRequest, "'threadPath'-parameter is not optional")
+		log.Info("routeGetComments", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+		})
 		return
 	}
 
@@ -52,6 +59,7 @@ func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
 	// Query comments tree
 	comments, err := logic.GetNewestComments(threadPath, parent, depth, max)
 	if err != nil {
+		log.Error("routeGetComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})

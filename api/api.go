@@ -40,7 +40,7 @@ func getStringQueryParameter(c *gin.Context, parameter string) (string, error) {
 		return url.QueryUnescape(valueStr[0])
 	}
 
-	return "", errors.New("could not find the parameter")
+	return "", errors.New("required parameter '" + parameter + "' not provided in query string")
 }
 
 func isAdmin(c *gin.Context, logic *logic.BusinessLogic) bool {
