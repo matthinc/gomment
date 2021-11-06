@@ -79,7 +79,11 @@ export class Gomment {
     this.apiURL = this.apiURL.endsWith('/') ? this.apiURL : `${this.apiURL}/`;
 
     /** @type {string} */
-    this.thread = options.thread;
+    if(typeof options.thread === 'string') {
+      this.threadPath = options.threadPath;
+    } else {
+      this.threadPath = this.getThreadPathFromLocation();
+    }
 
     // Optional options
     /** @type {number} */
@@ -122,14 +126,13 @@ export class Gomment {
 
   /**
    * Query for comments with the specified parameters.
-   * @param {string} threadId - Id of the comment thread.
    * @param {number} offset - The offset.
    * @param {number} max - Maximum amount of comments to query.
    * @param {number} depth - Maximum level of depth to query.
    * @returns {Promise<Response>} - HTML Response.
    */
-  queryComments(threadId, offset, max, depth) {
-    return window.fetch(`${this.apiURL}comments?thread=${threadId}&offset=${offset}&max=${max}&depth=${depth}`);
+  queryComments(offset, max, depth) {
+    return window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&offset=${offset}&max=${max}&depth=${depth}`);
   }
 
   /**
@@ -150,7 +153,7 @@ export class Gomment {
       this.renderComments(this.comments, data.total);
     };
 
-    this.queryComments(this.thread, offset, max, depth)
+    this.queryComments(offset, max, depth)
       .then(data => data.json())
       .then(handler);
   }
@@ -273,7 +276,7 @@ export class Gomment {
         email,
         text: content,
         parent_id: parent,
-        thread_id: this.thread
+        thread_path: this.threadPath,
       };
 
       // Post comment
@@ -379,5 +382,19 @@ export class Gomment {
 
     // Load and render comments
     this.loadCommentsInitial();
+  }
+
+  /**
+   * Calculate a cleaned-up thread path based on the current browser
+   * location by trimming all trailing slashes.
+   * @returns {string} - The cleaned up thread path
+   */
+  getThreadPathFromLocation() {
+    let pathname = window.location.pathname;
+
+    let i = pathname.length;
+    for(; i > 0 && pathname[i - 1] != '/'; i--);
+
+    return pathname.substring(0, i);
   }
 }
