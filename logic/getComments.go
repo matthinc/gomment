@@ -19,7 +19,7 @@ func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft i
 				children, subtotal = constructTreeDepthFirst(comments, comment.Id, depthLeft-1)
 				total = total + subtotal
 			} else {
-				children = nil
+				children = []model.CommentTree{}
 			}
 
 			subtrees = append(subtrees, model.CommentTree{Comment: comment, Children: children})
