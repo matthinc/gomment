@@ -38,7 +38,8 @@ func (logic *BusinessLogic) GetNewestComments(threadPath string, parentId int, m
 	subtrees, total := constructTreeDepthFirst(orderedComments, parentId, maxDepth)
 
 	return model.CommentsResponse{
-		Comments: subtrees,
-		Total:    total,
+		Comments:    subtrees,
+		NumChildren: len(subtrees),
+		Total:       total,
 	}, nil
 }
