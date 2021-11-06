@@ -52,13 +52,7 @@ function insertElement(type, className, parent, attributes = {}) {
 * @returns {string}
 */
 function defaultDateTransformer(date) {
-  const now = new Date();
-
-  // @ts-ignore - error TS2339: Property 'padStart' does not exist on type 'string'.
-  const timeString = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-
-  // @ts-ignore - error TS2339: Property 'padStart' does not exist on type 'string'.
-  return `${date.getFullYear()}.${String(date.getMonth()).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')} ${timeString}`;
+  return date.toLocaleString();
 }
 
 export class Gomment {
@@ -208,7 +202,7 @@ export class Gomment {
 
     const commentElement = insertElement('div', commentClass, parent);
     insertElement('div', 'gomment-comment-author', commentElement, { innerHTML: comment.comment.author });
-    insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: this.i18n.format_date(new Date(comment.comment.created_at)) });
+    insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: this.i18n.format_date(new Date(comment.comment.created_at * 1000)) });
     insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: comment.comment.text });
 
     const replyButton = insertElement('a', 'gomment-comment-reply', commentElement, { innerHTML: this.i18n.reply });
@@ -392,9 +386,16 @@ export class Gomment {
   getThreadPathFromLocation() {
     let pathname = window.location.pathname;
 
-    let i = pathname.length;
-    for(; i > 0 && pathname[i - 1] != '/'; i--);
+    // remove trailing slash if it exists
+    if (pathname[pathname.length - 1] === '/') {
+      pathname = pathname.substring(0, pathname.length - 1);
+    }
 
-    return pathname.substring(0, i);
+    // if the path is empty, use a slash as path
+    if (pathname.length === 0) {
+      pathname = '/';
+    }
+
+    return pathname;
   }
 }
