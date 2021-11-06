@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"time"
 
 	"github.com/matthinc/gomment/model"
 	_ "github.com/mattn/go-sqlite3"
@@ -68,11 +67,7 @@ func (db *DB) Setup() (err error) {
 	return nil
 }
 
-func (db *DB) CreateComment(commentCreation *model.CommentCreation) (int64, error) {
-	if commentCreation.CreatedAt == 0 {
-		commentCreation.CreatedAt = time.Now().Unix()
-	}
-
+func (db *DB) CreateComment(commentCreation *model.CommentCreation, createdAt int64) (int64, error) {
 	ctx := context.TODO()
 	transaction, err := db.database.BeginTx(ctx, nil)
 
@@ -92,8 +87,8 @@ func (db *DB) CreateComment(commentCreation *model.CommentCreation) (int64, erro
 		"INSERT INTO `comment` (`thread_id`, `parent_id`, `created_at`, `touched_at`, `author`, `email`, `text`) "+
 			"SELECT t1.`thread_id`, ?, ?, ?, ?, ?, ? FROM `thread` t1 WHERE t1.`path` = ?",
 		parentId,
-		commentCreation.CreatedAt,
-		commentCreation.CreatedAt,
+		createdAt,
+		createdAt,
 		commentCreation.Author,
 		commentCreation.Email,
 		commentCreation.Text,

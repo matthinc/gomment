@@ -55,7 +55,7 @@ func TestRootComment(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-01",
 		ParentId:   0,
-	})
+	}, 0)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -87,7 +87,7 @@ func TestNonExistingParent(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-02",
 		ParentId:   999,
-	})
+	}, 0)
 
 	assert.Zero(t, commentId)
 	require.Error(t, err)
@@ -112,7 +112,7 @@ func TestEmptyThread(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-05",
 		ParentId:   0,
-	})
+	}, 0)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -140,8 +140,7 @@ func TestChildComment(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-03",
 		ParentId:   0,
-		CreatedAt:  1,
-	})
+	}, 1)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -151,8 +150,7 @@ func TestChildComment(t *testing.T) {
 		Text:       "I disagree!",
 		ThreadPath: "/test-03",
 		ParentId:   1,
-		CreatedAt:  2,
-	})
+	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -193,8 +191,7 @@ func TestTwoChildComments(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-04",
 		ParentId:   0,
-		CreatedAt:  1,
-	})
+	}, 1)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -204,8 +201,7 @@ func TestTwoChildComments(t *testing.T) {
 		Text:       "I disagree!",
 		ThreadPath: "/test-04",
 		ParentId:   int(commentId),
-		CreatedAt:  2,
-	})
+	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -215,8 +211,7 @@ func TestTwoChildComments(t *testing.T) {
 		Text:       "I am the child.",
 		ThreadPath: "/test-04",
 		ParentId:   int(commentId),
-		CreatedAt:  3,
-	})
+	}, 3)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -262,7 +257,7 @@ func TestAvailableThreads(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-06-a",
 		ParentId:   0,
-	})
+	}, 1)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -272,7 +267,7 @@ func TestAvailableThreads(t *testing.T) {
 		Text:       "I disagree!",
 		ThreadPath: "/test-06-a",
 		ParentId:   0,
-	})
+	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -282,7 +277,7 @@ func TestAvailableThreads(t *testing.T) {
 		Text:       "I am the child.",
 		ThreadPath: "/test-06-b",
 		ParentId:   0,
-	})
+	}, 3)
 	require.NoError(t, err)
 
 	threads, err := db.GetThreads()
@@ -315,7 +310,7 @@ func TestNewestLimit(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-07",
 		ParentId:   0,
-	})
+	}, 1)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -325,7 +320,7 @@ func TestNewestLimit(t *testing.T) {
 		Text:       "I disagree!",
 		ThreadPath: "/test-07",
 		ParentId:   0,
-	})
+	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
@@ -356,8 +351,7 @@ func TestComplexTwoBranches(t *testing.T) {
 		Text:       "This is a great integration test.",
 		ThreadPath: "/test-08",
 		ParentId:   0,
-		CreatedAt:  1,
-	})
+	}, 1)
 	require.NoError(t, err)
 	assert.NotZero(t, rootComment1, "expected comment id to be not zero")
 
@@ -367,8 +361,7 @@ func TestComplexTwoBranches(t *testing.T) {
 		Text:       "I disagree!",
 		ThreadPath: "/test-08",
 		ParentId:   0,
-		CreatedAt:  2,
-	})
+	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, rootComment2, "expected comment id to be not zero")
 
@@ -378,8 +371,7 @@ func TestComplexTwoBranches(t *testing.T) {
 		Text:       "This is a great child.",
 		ThreadPath: "/test-08",
 		ParentId:   int(rootComment1),
-		CreatedAt:  3,
-	})
+	}, 3)
 	require.NoError(t, err)
 	assert.NotZero(t, leafComment1, "expected comment id to be not zero")
 
@@ -389,8 +381,7 @@ func TestComplexTwoBranches(t *testing.T) {
 		Text:       "No, dad!",
 		ThreadPath: "/test-08",
 		ParentId:   int(rootComment2),
-		CreatedAt:  4,
-	})
+	}, 4)
 	require.NoError(t, err)
 	assert.NotZero(t, leafComment2, "expected comment id to be not zero")
 

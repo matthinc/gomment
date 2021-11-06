@@ -19,9 +19,7 @@ func sanitize(commentCreation *model.CommentCreation) *model.CommentCreation {
 func (logic *BusinessLogic) CreateComment(commentCreation *model.CommentCreation) (int64, error) {
 	commentCreation = sanitize(commentCreation)
 
-	commentCreation.CreatedAt = time.Now().Unix()
-
-	id, err := logic.DB.CreateComment(commentCreation)
+	id, err := logic.DB.CreateComment(commentCreation, time.Now().Unix())
 	if err != nil {
 		return 0, fmt.Errorf("unable to create comment in the database: %w", err)
 	}

@@ -17,7 +17,7 @@ type MockDb struct {
 func (db *MockDb) Open(path string) error { return nil }
 func (db *MockDb) Setup() error           { return nil }
 func (db *MockDb) Close()                 {}
-func (db *MockDb) CreateComment(commentCreation *model.CommentCreation) (int64, error) {
+func (db *MockDb) CreateComment(commentCreation *model.CommentCreation, createdAt int64) (int64, error) {
 	db.creations = append(db.creations, *commentCreation)
 	return 0, nil
 }

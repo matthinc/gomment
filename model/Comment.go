@@ -18,7 +18,6 @@ type CommentCreation struct {
 	Author     string `json:"author" binding:"required"`
 	Email      string `json:"email" binding:"required"`
 	Text       string `json:"text" binding:"required"`
-	CreatedAt  int64
 }
 
 type CommentTree struct {
