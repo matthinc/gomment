@@ -12,6 +12,7 @@
  * @property {string} author The author of the comment.
  * @property {number} created_at Creation date of the comment.
  * @property {string} text The content of the comment.
+ * @property {number} [num_children] The total number of availabe children, independent of the shown children.
  */
 
 /**
@@ -19,7 +20,6 @@
  * @typedef {Object} Comment
  * @property {CommentData} [comment] The actual comment data (content).
  * @property {Array<Comment>} [children] Children comments of this comment.
- * @property {boolean} [has_children] Whether the comment has (unloaded) child comments.
  */
 
 /**
@@ -217,7 +217,8 @@ export class Gomment {
       for (const childComment of comment.children) {
         this.renderComment(childrenElement, childComment, treeIndex, depth + 1);
       }
-    } else if (comment.has_children) {
+    }
+    if (comment.comment.num_children > comment.children.length) {
       // No children but hasChildren -> Load more button
       insertElement('button', 'gomment-show-more-depth-button', childrenElement, {
         innerHTML: this.i18n.show_more_depth,
