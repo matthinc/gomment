@@ -106,8 +106,6 @@ export class Gomment {
     // stateful information
     /** @type {?} */
     this.comments = [];
-    /** @type {number} */
-    this.lastOffset = 0;
     /** @type {HTMLElement | null} */
     this.commentsElement = null;
     /** @type {HTMLElement | null} */
@@ -120,34 +118,31 @@ export class Gomment {
 
   /**
    * Query for comments with the specified parameters.
-   * @param {number} offset - The offset.
    * @param {number} max - Maximum amount of comments to query.
    * @param {number} depth - Maximum level of depth to query.
    * @returns {Promise<Response>} - HTML Response.
    */
-  queryComments(offset, max, depth) {
-    return window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&offset=${offset}&max=${max}&depth=${depth}`);
+  queryComments(max, depth) {
+    return window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`);
   }
 
   /**
    * Query for comments with the specified parameters and render them.
-   * @param {number} offset - The offset.
    * @param {number} max - Maximum amount of comments to query.
    * @param {number} depth - Maximum level of depth to query.
    * @returns {void}
    */
-  loadComments(offset, max, depth) {
+  loadComments(max, depth) {
     /** @type {(data: CommentQueryResponse) => void} */
     const handler = (data) => {
       data.comments.forEach(
         /** @type {(item: Comment, index: number) => any} */
-        (item, index) => this.comments[index + offset] = item
+        (item, index) => this.comments[index] = item
       );
-      this.lastOffset = offset;
       this.renderComments(this.comments, data.total);
     };
 
-    this.queryComments(offset, max, depth)
+    this.queryComments(max, depth)
       .then(data => data.json())
       .then(handler);
   }
@@ -157,7 +152,7 @@ export class Gomment {
    * @returns {void}
    */
   loadCommentsInitial() {
-    this.loadComments(0, this.batchSize, this.maxDepth);
+    this.loadComments(this.batchSize, this.maxDepth);
   }
 
   /**
@@ -165,7 +160,7 @@ export class Gomment {
    * @returns {void}
    */
   reloadComments() {
-    this.loadComments(this.lastOffset, this.batchSize, this.maxDepth);
+    this.loadComments(this.batchSize, this.maxDepth);
   }
 
   /**
@@ -173,7 +168,7 @@ export class Gomment {
    * @returns {void}
    */
   loadNextBatch() {
-    this.loadComments(this.lastOffset + this.batchSize, this.batchSize, this.maxDepth);
+    this.loadComments(this.batchSize, this.maxDepth);
   }
 
   /**
