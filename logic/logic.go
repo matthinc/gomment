@@ -11,12 +11,12 @@ type SessionData struct {
 }
 
 type BusinessLogic struct {
-	DB         *persistence.DB
+	DB         persistence.Persistence
 	PwHash     string
 	SessionMap map[string]SessionData
 }
 
-func Create(db *persistence.DB, pwHash string) BusinessLogic {
+func Create(db persistence.Persistence, pwHash string) BusinessLogic {
 	return BusinessLogic{
 		db,
 		pwHash,

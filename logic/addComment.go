@@ -7,17 +7,17 @@ import (
 	"github.com/matthinc/gomment/model"
 )
 
-func sanitize(comment *model.Comment) *model.Comment {
-	comment.Author = html.EscapeString(comment.Author)
-	comment.Text = html.EscapeString(comment.Text)
-	comment.Email = html.EscapeString(comment.Email)
+func sanitize(commentCreation *model.CommentCreation) *model.CommentCreation {
+	commentCreation.Author = html.EscapeString(commentCreation.Author)
+	commentCreation.Text = html.EscapeString(commentCreation.Text)
+	commentCreation.Email = html.EscapeString(commentCreation.Email)
 
-	return comment
+	return commentCreation
 }
 
-func (logic *BusinessLogic) AddComment(comment *model.Comment) int64 {
-	comment = sanitize(comment)
-	id, err := logic.DB.AddComment(comment)
+func (logic *BusinessLogic) CreateComment(commentCreation *model.CommentCreation) int64 {
+	commentCreation = sanitize(commentCreation)
+	id, err := logic.DB.CreateComment(commentCreation)
 	if err != nil {
 		fmt.Println(err)
 	}

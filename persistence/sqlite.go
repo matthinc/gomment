@@ -1,10 +1,13 @@
 package persistence
 
 import (
-	"fmt"
+	"context"
 	"database/sql"
-    _ "github.com/mattn/go-sqlite3"
-    "github.com/matthinc/gomment/model"
+	"fmt"
+	"time"
+
+	"github.com/matthinc/gomment/model"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type DBError struct {
@@ -16,84 +19,216 @@ func (err DBError) Error() string {
 }
 
 type DB struct {
-	database* sql.DB
+	database *sql.DB
 }
 
-func (db* DB) Open(path string) (err error) {
-	database, err := sql.Open("sqlite3", path)
+func New() DB {
+	return DB{}
+}
+
+func (db *DB) Close() {
+	db.database.Close()
+}
+
+const commentSelectFields = "`comment_id`, `parent_id`, `created_at`, `touched_at`, `num_children`, `author`, `text`"
+
+func (db *DB) Open(path string) (err error) {
+	database, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
 	if err != nil {
 		fmt.Println("error opening the database", err)
 		return err
 	}
 	db.database = database
-	fmt.Println("database opened", database)
 	return nil
 }
 
-func (db* DB) Setup() (err error) {
-	_, err1 := db.database.Exec("CREATE TABLE IF NOT EXISTS `thread` ( `thread_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE )")
-	_, err2 :=db.database.Exec("CREATE TABLE IF NOT EXISTS `comment` ( `comment_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `thread_id` INTEGER NOT NULL, `parent_id` INTEGER NOT NULL DEFAULT 0, `verified` INTEGER NOT NULL DEFAULT 0, `created_at` INTEGER NOT NULL, `edited_at` INTEGER DEFAULT NULL, `author` TEXT, `email` TEXT, `text` TEXT )")
+// setup the database by creating all required tables
+func (db *DB) Setup() (err error) {
+	_, err1 := db.database.Exec("CREATE TABLE IF NOT EXISTS `thread` ( `thread_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `path` TEXT NOT NULL UNIQUE )")
+	_, err2 := db.database.Exec("CREATE TABLE IF NOT EXISTS `comment` ( " +
+		"`comment_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, " +
+		"`thread_id` INTEGER NOT NULL, " +
+		"`parent_id` INTEGER DEFAULT NULL, " +
+		"`num_children` INTEGER NOT NULL DEFAULT 0, " +
+		"`verified` INTEGER NOT NULL DEFAULT 0, " +
+		"`created_at` INTEGER NOT NULL, " +
+		"`edited_at` INTEGER DEFAULT NULL, " +
+		"`touched_at` INTEGER NOT NULL, " +
+		"`author` TEXT NOT NULL, " +
+		"`email` TEXT DEFAULT NULL, " +
+		"`text` TEXT NOT NULL, " +
+		"FOREIGN KEY(`thread_id`) REFERENCES `thread` (`thread_id`), " +
+		"FOREIGN KEY(`parent_id`) REFERENCES `comment` (`comment_id`) " +
+		")")
 
 	if err1 != nil || err2 != nil {
-		return DBError {"Unable to create DB"}
+		return DBError{"Unable to create DB"}
 	}
 
 	return nil
 }
 
-func (db *DB)  AddComment(comment* model.Comment) (int64, error) {
-    result, err := db.database.Exec(
-        "INSERT INTO `comment` (text, author, email, thread_id, parent_id,created_at) VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)",
-        comment.Text,
-        comment.Author,
-        comment.Email,
-        comment.ThreadId,
-        comment.ParentId)
+func (db *DB) CreateComment(commentCreation *model.CommentCreation) (int64, error) {
+	if commentCreation.CreatedAt == 0 {
+		commentCreation.CreatedAt = time.Now().Unix()
+	}
 
-    id, _ := result.LastInsertId()
-    return id, err
+	ctx := context.TODO()
+	transaction, err := db.database.BeginTx(ctx, nil)
+
+	// create a new thread if it doesn't already exist
+	res, err := transaction.ExecContext(ctx, "INSERT OR IGNORE INTO `thread`(`path`) VALUES(?)", commentCreation.ThreadPath)
+	if err != nil {
+		transaction.Rollback()
+		return 0, fmt.Errorf("failed to insert thread: %w", err)
+	}
+
+	parentId := sql.NullInt64{
+		Int64: int64(commentCreation.ParentId),
+		Valid: commentCreation.ParentId != 0,
+	}
+
+	res, err = transaction.Exec(
+		"INSERT INTO `comment` (`thread_id`, `parent_id`, `created_at`, `touched_at`, `author`, `email`, `text`) "+
+			"SELECT t1.`thread_id`, ?, ?, ?, ?, ?, ? FROM `thread` t1 WHERE t1.`path` = ?",
+		parentId,
+		commentCreation.CreatedAt,
+		commentCreation.CreatedAt,
+		commentCreation.Author,
+		commentCreation.Email,
+		commentCreation.Text,
+		commentCreation.ThreadPath,
+	)
+	if err != nil {
+		transaction.Rollback()
+		return 0, fmt.Errorf("failed to insert comment: %w", err)
+	}
+
+	commentId, err := res.LastInsertId()
+	if err != nil {
+		transaction.Rollback()
+		return 0, fmt.Errorf("failed to retrieve id of recently inserted comment: %w", err)
+	}
+
+	// set the touched_at date of all (recursive) parent comments to the created_at date of the leaf comment
+	res, err = transaction.Exec(
+		"UPDATE `comment` SET `touched_at` = c1.`created_at` FROM (SELECT `created_at` FROM `comment` WHERE `comment_id` = ?) AS c1 WHERE `comment_id` IN ("+
+			"WITH RECURSIVE `parents`(`parent_id`) AS (SELECT ? UNION SELECT `comment`.`parent_id` FROM `comment`,`parents` where `comment_id` = `parents`.`parent_id`)"+
+			"SELECT `parent_id` from parents"+
+			")",
+		commentId,
+		commentId,
+	)
+	if err != nil {
+		transaction.Rollback()
+		return 0, fmt.Errorf("failed to update the `touched_at` times for parent comments: %w", err)
+	}
+
+	// increment the num_children variable for the parent
+	if parentId.Valid {
+		res, err = transaction.Exec(
+			"UPDATE `comment` SET `num_children` = `num_children` + 1 WHERE `comment_id` = ?;",
+			parentId,
+		)
+		if err != nil {
+			transaction.Rollback()
+			return 0, fmt.Errorf("failed to increment the `num_children` value for parent comment: %w", err)
+		}
+	}
+
+	err = transaction.Commit()
+	if err != nil {
+		return 0, fmt.Errorf("failed to commit the comment insertion transaction: %w", err)
+	}
+
+	return commentId, nil
 }
 
-func (db *DB) QueryComments(thread int) []model.Comment {
-    rows, _ := db.database.Query("SELECT comment_id, parent_id, created_at, author, text FROM `comment` where thread_id = ? ORDER BY created_at DESC", thread)
-    defer rows.Close()
+func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
+	response := make([]model.Comment, 0)
 
-    response := make([]model.Comment, 0)
+	var (
+		id          int
+		parent      sql.NullInt64
+		createdAt   int64
+		touchedAt   int64
+		numChildren int
+		author      string
+		text        string
+	)
 
-    var (
-        id int
-        parent int
-        created string
-        author string
-        text string
-    )
+	for rows.Next() {
+		err := rows.Scan(&id, &parent, &createdAt, &touchedAt, &numChildren, &author, &text)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan result row: %w", err)
+		}
 
-    for rows.Next() {
-        rows.Scan(&id, &parent, &created, &author, &text)
-        comment := model.Comment {
-            Id: id,
-            ParentId: parent,
-            Created: created,
-            Author: author,
-            Text: text,
-        }
-        response = append(response, comment)
-    }
+		parentId := 0
+		if parent.Valid {
+			parentId = int(parent.Int64)
+		}
 
-    return response
+		comment := model.Comment{
+			Id:          id,
+			Author:      author,
+			Email:       "",
+			Text:        text,
+			ThreadId:    9999,
+			ParentId:    parentId,
+			CreatedAt:   createdAt,
+			TouchedAt:   touchedAt,
+			NumChildren: numChildren,
+		}
+		response = append(response, comment)
+	}
+
+	return response, nil
 }
 
-func (db *DB) QueryThreads() []model.Thread {
-    rows, _ := db.database.Query("SELECT DISTINCT thread_id FROM `comment`")
-    defer rows.Close()
+func (db *DB) QueryCommentsById(thread int) ([]model.Comment, error) {
+	rows, err := db.database.Query("SELECT "+commentSelectFields+" FROM `comment` where thread_id = ? ORDER BY created_at DESC", thread)
+	defer rows.Close()
 
-    response := make([]model.Thread, 0)
+	if err != nil {
+		return nil, err
+	}
 
-    var id int
-    for rows.Next() {
-        rows.Scan(&id)
-        response = append(response, model.Thread {id})
-    }
+	return db.parseCommentsQuery(rows)
+}
 
-    return response
+func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, error) {
+	rows, err := db.database.Query(
+		"SELECT "+commentSelectFields+" FROM `comment`, `thread` where `comment`.`thread_id` = `thread`.`thread_id` AND path = ? ORDER BY `touched_at` DESC, `created_at` ASC LIMIT ?",
+		path,
+		limit,
+	)
+	defer rows.Close()
+
+	if err != nil {
+		return nil, err
+	}
+
+	return db.parseCommentsQuery(rows)
+}
+
+func (db *DB) GetThreads() ([]model.Thread, error) {
+	rows, _ := db.database.Query("SELECT `thread_id`, `path` FROM `thread`")
+	defer rows.Close()
+
+	response := make([]model.Thread, 0)
+
+	var id int
+	var path string
+	for rows.Next() {
+		if err := rows.Scan(&id, &path); err != nil {
+			return nil, fmt.Errorf("failed to scan result row: %w", err)
+		}
+
+		response = append(response, model.Thread{
+			Id:   id,
+			Path: path,
+		})
+	}
+
+	return response, nil
 }

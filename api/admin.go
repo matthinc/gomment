@@ -46,6 +46,13 @@ func routeAdminLogin(c *gin.Context, l *logic.BusinessLogic) {
 }
 
 func routeAdminThreads(c *gin.Context, l *logic.BusinessLogic) {
-	threads := l.DB.QueryThreads()
+	threads, err := l.DB.GetThreads()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": "error",
+		})
+		return
+	}
+
 	c.JSON(http.StatusOK, threads)
 }

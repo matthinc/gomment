@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -29,6 +30,17 @@ func getIntQueryParameter(c *gin.Context, parameter string, defaultValue int) in
 	}
 
 	return value
+}
+
+func getStringQueryParameter(c *gin.Context, parameter string) (string, error) {
+	queryParameters := c.Request.URL.Query()
+
+	valueStr, hasValue := queryParameters[parameter]
+	if hasValue {
+		return url.QueryUnescape(valueStr[0])
+	}
+
+	return "", errors.New("could not find the parameter")
 }
 
 func isAdmin(c *gin.Context, logic *logic.BusinessLogic) bool {

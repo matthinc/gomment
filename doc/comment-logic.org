@@ -1,4 +1,5 @@
 #+STARTUP: indent
+
 * Comment Struct from API
 - comment_id
 - thread_id
@@ -8,16 +9,21 @@
 - children: []
 ** Facts
 - Parents are always created before their children
+
 * Retrieving Comments
+
 ** "I want the newest 100 comments"
+
 *** Straightforward Soulution
 - SQL query with =ORDER BY created_at LIMIT ...=
 - Problem: Query result might be only leaf comments / some root comments might be missing
   - Test-Case: Insert 1 root comment with 100 child comments, query tree of 100 last comments
+
 *** Query all root comments + 100 newest comments
 - SQL query with =SELECT ... WHERE parent_id = 0 OR comment_id IN (SELECT ... ORDER BY created_at ...)=
 - Problem: Possibly huge number of comments, parent comments might still be missing
   - Test-Case: Check that every comment has a parent
+
 *** Recursive Solution
 - Select newest 100 comments, then recursive SQL query that loads the parents of the parents of ...
 - Problem?: Slow?, non-root comments "skip" comments between them
@@ -42,8 +48,10 @@ COMMIT TRANSACTION;
     #+begin_example sql
 UPDATE `comment` AS c SET `num_children` = (SELECT COUNT(`comment_id`) FROM `comment` WHERE `parent_id` = c.`comment_id`);
     #+end_example
+
 **** Loading more sibling comments
 - Client must specify all loaded siblings => =SELECT ... WHERE parent_id = bla AND comment_id NOT IN (...)=
+
 *** Propagating child insert dates
 - Get all ids of branch
   #+begin_example sql
@@ -52,7 +60,7 @@ SELECT `parent_id` from parents;
   #+end_example
 - Update all ids
   #+begin_example sql
-UPDATE `comment` SET `touched_at` = "2022-01-01 00:00:00" WHERE `comment_id` IN (
+UPDATE `comment` SET `touched_at` = c1.`created_at` FROM (SELECT `created_at` FROM `comment` WHERE `comment_id` = 17) AS c1 WHERE `comment_id` IN (
   WITH RECURSIVE `parents`(`parent_id`) AS (SELECT 17 UNION SELECT `comment`.`parent_id` FROM `comment`,`parents` where `comment_id` = `parents`.`parent_id`)
   SELECT `parent_id` from parents
 );
@@ -64,5 +72,6 @@ UPDATE `comment` SET `touched_at` = "2022-01-01 00:00:00" WHERE `comment_id` IN 
     - but before that sort and limit by =ORDER BY `touched_at` DESC, `created_at` ASC LIMIT=
     - Impossible Corner case: Parent and child have the same date
   - Test: No comment without parent
+
 **** Loading more sibling comments
 - Sibling comments can be older or younger (since ordered by =touched_at=)
