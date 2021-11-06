@@ -15,10 +15,10 @@ type Comment struct {
 type CommentCreation struct {
 	ThreadPath string `json:"thread_path" binding:"required"`
 	ParentId   int    `json:"parent_id" binding:"required"`
-	CreatedAt  int64  `json:"created_at" binding:"required"`
 	Author     string `json:"author" binding:"required"`
 	Email      string `json:"email" binding:"required"`
 	Text       string `json:"text" binding:"required"`
+	CreatedAt  int64
 }
 
 type CommentTree struct {

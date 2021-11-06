@@ -3,6 +3,7 @@ package logic
 import (
 	"fmt"
 	"html"
+	"time"
 
 	"github.com/matthinc/gomment/model"
 )
@@ -15,12 +16,15 @@ func sanitize(commentCreation *model.CommentCreation) *model.CommentCreation {
 	return commentCreation
 }
 
-func (logic *BusinessLogic) CreateComment(commentCreation *model.CommentCreation) int64 {
+func (logic *BusinessLogic) CreateComment(commentCreation *model.CommentCreation) (int64, error) {
 	commentCreation = sanitize(commentCreation)
+
+	commentCreation.CreatedAt = time.Now().Unix()
+
 	id, err := logic.DB.CreateComment(commentCreation)
 	if err != nil {
-		fmt.Println(err)
+		return 0, fmt.Errorf("unable to create comment in the database: %w", err)
 	}
 
-	return id
+	return id, nil
 }
