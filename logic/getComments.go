@@ -29,34 +29,6 @@ func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft i
 	return subtrees, total + len(subtrees)
 }
 
-func (logic *BusinessLogic) GetCommentsTree(threadPath string, parent int, depth int, max int, offset int) (model.CommentsResponse, error) {
-	comments, err := logic.DB.GetNewestCommentsByPath(threadPath, max)
-	if err != nil {
-		return model.CommentsResponse{}, fmt.Errorf("unable to get comments from database: %w", err)
-	}
-
-	trees, _ := constructTreeDepthFirst(comments, 0, depth)
-
-	total := len(trees)
-
-	// Offset
-	if len(trees) > offset {
-		trees = trees[offset:]
-	} else {
-		trees = []model.CommentTree{}
-	}
-
-	// Max
-	if len(trees) > max && max > 0 {
-		trees = trees[:max]
-	}
-
-	return model.CommentsResponse{
-		Comments: trees,
-		Total:    total,
-	}, nil
-}
-
 func (logic *BusinessLogic) GetNewestComments(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
 	orderedComments, err := logic.DB.GetNewestCommentsByPath(threadPath, maxCount)
 	if err != nil {
