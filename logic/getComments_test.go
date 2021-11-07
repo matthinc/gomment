@@ -45,7 +45,6 @@ func TestSimple(t *testing.T) {
 			Author:      "gandalf",
 			Email:       "gandi@dalfi.com",
 			Text:        "Power to me",
-			ThreadId:    1,
 			ParentId:    0,
 			CreatedAt:   1,
 			TouchedAt:   1,
@@ -73,7 +72,6 @@ func TestTwoRootComments(t *testing.T) {
 			Author:      "gandalf",
 			Email:       "gandi@dalfi.com",
 			Text:        "Power to me",
-			ThreadId:    1,
 			ParentId:    0,
 			CreatedAt:   1,
 			TouchedAt:   1,
@@ -83,7 +81,6 @@ func TestTwoRootComments(t *testing.T) {
 			Author:      "peter",
 			Email:       "peter@sad.de",
 			Text:        "I am a spammer",
-			ThreadId:    1,
 			ParentId:    0,
 			CreatedAt:   2,
 			TouchedAt:   2,
@@ -114,7 +111,6 @@ func TestTwoChainedComments(t *testing.T) {
 			Author:      "gandalf",
 			Email:       "gandi@dalfi.com",
 			Text:        "Power to me",
-			ThreadId:    1,
 			ParentId:    0,
 			CreatedAt:   1,
 			TouchedAt:   1,
@@ -124,7 +120,6 @@ func TestTwoChainedComments(t *testing.T) {
 			Author:      "peter",
 			Email:       "peter@sad.de",
 			Text:        "I am a spammer",
-			ThreadId:    1,
 			ParentId:    1,
 			CreatedAt:   2,
 			TouchedAt:   2,
@@ -157,7 +152,6 @@ func TestTwoChains(t *testing.T) {
 			Author:      "gandalf",
 			Email:       "gandi@dalfi.com",
 			Text:        "Power to me",
-			ThreadId:    1,
 			ParentId:    0,
 			CreatedAt:   1,
 			TouchedAt:   1,
@@ -167,7 +161,6 @@ func TestTwoChains(t *testing.T) {
 			Author:      "peter",
 			Email:       "peter@sad.de",
 			Text:        "I am a spammer",
-			ThreadId:    1,
 			ParentId:    1,
 			CreatedAt:   3,
 			TouchedAt:   3,
@@ -177,7 +170,6 @@ func TestTwoChains(t *testing.T) {
 			Author:      "",
 			Email:       "",
 			Text:        "",
-			ThreadId:    1,
 			ParentId:    0,
 			CreatedAt:   2,
 			TouchedAt:   2,
@@ -187,7 +179,6 @@ func TestTwoChains(t *testing.T) {
 			Author:      "",
 			Email:       "",
 			Text:        "",
-			ThreadId:    1,
 			ParentId:    3,
 			CreatedAt:   4,
 			TouchedAt:   4,
@@ -217,4 +208,45 @@ func TestTwoChains(t *testing.T) {
 	assert.Equal(t, 0, len(firstChild.Children), "expected the first child to not have any children")
 	assert.Equal(t, 4, secondChild.Comment.Id, "expected second child to have the id 4")
 	assert.Equal(t, 0, len(secondChild.Children), "expected the second child to not have any children")
+}
+
+func TestLeafyChain(t *testing.T) {
+	db := MockDb{
+		comments: []model.Comment{{
+			Id:       1,
+			ParentId: 0,
+		}, {
+			Id:       2,
+			ParentId: 1,
+		}, {
+			Id:       3,
+			ParentId: 2,
+		}, {
+			Id:       4,
+			ParentId: 2,
+		}},
+	}
+	sut := logic.Create(&db, "")
+
+	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
+	require.NoError(t, err)
+
+	assert.Equal(t, 4, commentResponse.NumTotal, "expected the total number of comments to be 4")
+
+	// require.Equal(t, 2, len(commentResponse.Comments), "expected the tree to have 2 root comments")
+	// firstTree := commentResponse.Comments[0]
+	// secondTree := commentResponse.Comments[1]
+
+	// assert.Equal(t, 1, firstTree.Comment.Id, "expected the first root comment to have the id 1")
+	// assert.Equal(t, 3, secondTree.Comment.Id, "expected the second root comment to have the id 3")
+
+	// require.Equal(t, 1, len(firstTree.Children), "expected the first root comment to have 1 child")
+	// require.Equal(t, 1, len(secondTree.Children), "expected the second root comment to have 1 child")
+	// firstChild := firstTree.Children[0]
+	// secondChild := secondTree.Children[0]
+
+	// assert.Equal(t, 2, firstChild.Comment.Id, "expected first child to have the id 2")
+	// assert.Equal(t, 0, len(firstChild.Children), "expected the first child to not have any children")
+	// assert.Equal(t, 4, secondChild.Comment.Id, "expected second child to have the id 4")
+	// assert.Equal(t, 0, len(secondChild.Children), "expected the second child to not have any children")
 }

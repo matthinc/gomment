@@ -184,7 +184,6 @@ func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
 			Author:      author,
 			Email:       "",
 			Text:        text,
-			ThreadId:    9999,
 			ParentId:    parentId,
 			CreatedAt:   createdAt,
 			TouchedAt:   touchedAt,
