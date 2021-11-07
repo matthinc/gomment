@@ -418,3 +418,138 @@ func TestComplexTwoBranches(t *testing.T) {
 		}
 	}
 }
+
+func TestMoreSiblingsSimple(t *testing.T) {
+	db, deleter, err := createTestDatabase("09")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleter()
+	defer db.Close()
+
+	err = db.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rootComment1, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-09",
+		ParentId:   0,
+	}, 1)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment1, "expected comment id to be not zero")
+
+	rootComment2, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-09",
+		ParentId:   0,
+	}, 2)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment2, "expected comment id to be not zero")
+
+	comments, err := db.GetMoreNewestSiblings(1, 0, 2, []int64{rootComment2}, 1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(comments), "expected one sibling comment to be returned")
+
+	assert.Equal(t, 1, comments[0].Id, "expected loaded sibling to have id 1")
+}
+
+func TestMoreSiblingsUnordered(t *testing.T) {
+	db, deleter, err := createTestDatabase("10")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleter()
+	defer db.Close()
+
+	err = db.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	comments, err := db.GetMoreNewestSiblings(1, 0, 2, []int64{2, 1}, 1)
+	assert.Error(t, err, "expected error when excludeIds parameter is not ordered")
+	assert.Equal(t, 0, len(comments))
+}
+
+func TestMoreSiblingsExcludeMiddle(t *testing.T) {
+	db, deleter, err := createTestDatabase("11")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleter()
+	defer db.Close()
+
+	err = db.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rootComment1, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-11",
+		ParentId:   0,
+	}, 1)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment1, "expected comment id to be not zero")
+
+	rootComment2, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-11",
+		ParentId:   0,
+	}, 2)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment2, "expected comment id to be not zero")
+
+	rootComment3, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-11",
+		ParentId:   0,
+	}, 3)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment3, "expected comment id to be not zero")
+
+	comments, err := db.GetMoreNewestSiblings(1, 0, 3, []int64{rootComment2}, 99)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(comments), "expected two sibling comments to be returned")
+
+	assert.Equal(t, 3, comments[0].Id, "expected first loaded sibling to have id 3")
+	assert.Equal(t, 1, comments[1].Id, "expected first loaded sibling to have id 1")
+}
+
+func TestMoreSiblingsIgnoreYounger(t *testing.T) {
+	db, deleter, err := createTestDatabase("12")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer deleter()
+	defer db.Close()
+
+	err = db.Setup()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	rootComment1, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-12",
+		ParentId:   0,
+	}, 1)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment1, "expected comment id to be not zero")
+
+	rootComment2, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-12",
+		ParentId:   0,
+	}, 2)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment2, "expected comment id to be not zero")
+
+	rootComment3, err := db.CreateComment(&model.CommentCreation{
+		ThreadPath: "/test-12",
+		ParentId:   0,
+	}, 3)
+	require.NoError(t, err)
+	assert.NotZero(t, rootComment3, "expected comment id to be not zero")
+
+	comments, err := db.GetMoreNewestSiblings(1, 0, 2, []int64{rootComment2}, 1)
+	require.NoError(t, err)
+	require.Equal(t, 1, len(comments), "expected one sibling comment to be returned")
+
+	assert.Equal(t, 1, comments[0].Id, "expected loaded sibling to have id 1")
+}

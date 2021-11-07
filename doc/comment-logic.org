@@ -75,6 +75,24 @@ UPDATE `comment` SET `touched_at` = c1.`created_at` FROM (SELECT `created_at` FR
 
 **** Loading more sibling comments
 - Sibling comments can be older or younger (since ordered by =touched_at=)
+- => Load all comments that are older (~created_at~) than the newest loaded comment, then filter out the eixisting ones
+
+***** Using a =NOT IN= selection
+- Problem: Sqlite does not allow binding arrays by default
+- =carray= extension could be used, but is not available in go: https://sqlite.org/carray.html, https://github.com/mattn/go-sqlite3/pull/347#issuecomment-259771669
+#+begin_example
+SELECT * FROM `comment` WHERE
+  `thread_id` = 1 AND
+  `parent_id` = NULL AND
+  `created_at` < 1636276724 AND
+  `comment_id` NOT IN (4,6)
+ORDER BY `created_at` LIMIT 10
+#+end_example
+
+***** Filtering on client side
+- Problem: What value to pick for the limit argument?
+  - Best estimate: ~batch size + comments to exclude~
+- Assumption: Ordering by ~created_at~ implies reverse ordering by ~comment_id~
 
 **** Are there more root comments?
 - Root comments do not have a common parent => no ~num_children~ available when querying

@@ -36,6 +36,9 @@ func (db *MockDb) GetNewestCommentsByPath(path string, limit int) ([]model.Comme
 		NumRoot:  numRoot,
 	}, nil
 }
+func (db *MockDb) GetMoreNewestSiblings(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
+	return db.comments, nil
+}
 func (db *MockDb) GetThreads() ([]model.Thread, error) { return []model.Thread{}, nil }
 
 func TestSimple(t *testing.T) {
