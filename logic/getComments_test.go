@@ -5,6 +5,7 @@ import (
 
 	"github.com/matthinc/gomment/logic"
 	"github.com/matthinc/gomment/model"
+	"github.com/matthinc/gomment/persistence"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,8 +22,19 @@ func (db *MockDb) CreateComment(commentCreation *model.CommentCreation, createdA
 	db.creations = append(db.creations, *commentCreation)
 	return 0, nil
 }
-func (db *MockDb) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, error) {
-	return db.comments, nil
+func (db *MockDb) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
+	numRoot := 0
+
+	for _, comment := range db.comments {
+		if comment.ParentId == 0 {
+			numRoot = numRoot + 1
+		}
+	}
+
+	return db.comments, persistence.ThreadMetaInfo{
+		NumTotal: len(db.comments),
+		NumRoot:  numRoot,
+	}, nil
 }
 func (db *MockDb) GetThreads() ([]model.Thread, error) { return []model.Thread{}, nil }
 
@@ -45,7 +57,7 @@ func TestSimple(t *testing.T) {
 	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
 	require.NoError(t, err)
 
-	assert.Equal(t, 1, commentResponse.Total, "expected the total number of comments to be 1")
+	assert.Equal(t, 1, commentResponse.NumTotal, "expected the total number of comments to be 1")
 	require.Equal(t, 1, len(commentResponse.Comments), "expected the tree to have 1 root comment")
 
 	firstTree := commentResponse.Comments[0]
@@ -83,7 +95,7 @@ func TestTwoRootComments(t *testing.T) {
 	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
 	require.NoError(t, err)
 
-	assert.Equal(t, 2, commentResponse.Total, "expected the total number of comments to be 2")
+	assert.Equal(t, 2, commentResponse.NumTotal, "expected the total number of comments to be 2")
 	require.Equal(t, 2, len(commentResponse.Comments), "expected the tree to have 2 root comments")
 
 	firstTree := commentResponse.Comments[0]
@@ -124,7 +136,7 @@ func TestTwoChainedComments(t *testing.T) {
 	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
 	require.NoError(t, err)
 
-	assert.Equal(t, 2, commentResponse.Total, "expected the total number of comments to be 2")
+	assert.Equal(t, 2, commentResponse.NumTotal, "expected the total number of comments to be 2")
 
 	require.Equal(t, 1, len(commentResponse.Comments), "expected the tree to have 1 root comment")
 	firstTree := commentResponse.Comments[0]
@@ -187,7 +199,7 @@ func TestTwoChains(t *testing.T) {
 	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
 	require.NoError(t, err)
 
-	assert.Equal(t, 4, commentResponse.Total, "expected the total number of comments to be 4")
+	assert.Equal(t, 4, commentResponse.NumTotal, "expected the total number of comments to be 4")
 
 	require.Equal(t, 2, len(commentResponse.Comments), "expected the tree to have 2 root comments")
 	firstTree := commentResponse.Comments[0]

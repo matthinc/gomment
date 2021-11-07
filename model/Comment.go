@@ -26,12 +26,15 @@ type CommentTree struct {
 }
 
 type CommentsResponse struct {
-	Comments    []CommentTree `json:"comments"`
-	NumChildren int           `json:"num_children"`
-	Total       int           `json:"total"`
+	Comments       []CommentTree `json:"comments"`
+	NumRoot        int           `json:"num_root"`
+	NumTotal       int           `json:"num_total"`
+	NumRootPayload int           `json:"num_root_payload"`
 }
 
 type Thread struct {
-	Id   int
-	Path string
+	Id       int
+	Path     string
+	NumTotal int
+	NumRoot  int
 }

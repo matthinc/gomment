@@ -52,7 +52,7 @@ UPDATE `comment` AS c SET `num_children` = (SELECT COUNT(`comment_id`) FROM `com
 **** Loading more sibling comments
 - Client must specify all loaded siblings => =SELECT ... WHERE parent_id = bla AND comment_id NOT IN (...)=
 
-*** Propagating child insert dates
+*** DONE Propagating child insert dates
 - Get all ids of branch
   #+begin_example sql
 WITH RECURSIVE `parents`(`parent_id`) AS (SELECT 17 UNION SELECT `comment`.`parent_id` FROM `comment`,`parents` where `comment_id` = `parents`.`parent_id`)
@@ -75,3 +75,16 @@ UPDATE `comment` SET `touched_at` = c1.`created_at` FROM (SELECT `created_at` FR
 
 **** Loading more sibling comments
 - Sibling comments can be older or younger (since ordered by =touched_at=)
+
+**** Are there more root comments?
+- Root comments do not have a common parent => no ~num_children~ available when querying
+
+***** Artificial "Trunk" Comment without data
+- No real comment (no content), could confuse other algorithms
+- Comment hierarchy depth is increase by 1
+- What ID to use? ~parent_id = 0~ is already used for root comments
+
+***** Extra attributes in =thread= table
+- Thread table must be queryied for every initial comment request (not expensive, cacheable)
+- Possibility to store more thread-specific meta information
+- Extra attributes: ~num_total~, ~num_root~

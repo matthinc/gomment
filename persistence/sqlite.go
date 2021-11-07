@@ -32,6 +32,7 @@ func (db *DB) Close() {
 const commentSelectFields = "`comment_id`, `parent_id`, `created_at`, `touched_at`, `num_children`, `author`, `text`"
 
 func (db *DB) Open(path string) (err error) {
+	// https://github.com/mattn/go-sqlite3/issues/377
 	database, err := sql.Open("sqlite3", path+"?_foreign_keys=on")
 	if err != nil {
 		fmt.Println("error opening the database", err)
@@ -43,7 +44,12 @@ func (db *DB) Open(path string) (err error) {
 
 // setup the database by creating all required tables
 func (db *DB) Setup() (err error) {
-	_, err1 := db.database.Exec("CREATE TABLE IF NOT EXISTS `thread` ( `thread_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `path` TEXT NOT NULL UNIQUE )")
+	_, err1 := db.database.Exec("CREATE TABLE IF NOT EXISTS `thread` ( " +
+		"`thread_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, " +
+		"`path` TEXT NOT NULL UNIQUE, " +
+		"`num_total` INTEGER NOT NULL DEFAULT 1, " +
+		"`num_root` INTEGER NOT NULL DEFAULT 1" +
+		")")
 	_, err2 := db.database.Exec("CREATE TABLE IF NOT EXISTS `comment` ( " +
 		"`comment_id` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, " +
 		"`thread_id` INTEGER NOT NULL, " +
@@ -71,8 +77,18 @@ func (db *DB) CreateComment(commentCreation *model.CommentCreation, createdAt in
 	ctx := context.TODO()
 	transaction, err := db.database.BeginTx(ctx, nil)
 
+	numRoot := 0
+	if commentCreation.ParentId == 0 {
+		numRoot = 1
+	}
+
 	// create a new thread if it doesn't already exist
-	res, err := transaction.ExecContext(ctx, "INSERT OR IGNORE INTO `thread`(`path`) VALUES(?)", commentCreation.ThreadPath)
+	res, err := transaction.ExecContext(ctx, "INSERT INTO `thread`(`path`) VALUES(?) ON CONFLICT(`path`) DO UPDATE SET "+
+		"`num_total` = `num_total` + 1, "+
+		"`num_root` = `num_root` + ?",
+		commentCreation.ThreadPath,
+		numRoot,
+	)
 	if err != nil {
 		transaction.Rollback()
 		return 0, fmt.Errorf("failed to insert thread: %w", err)
@@ -191,19 +207,49 @@ func (db *DB) QueryCommentsById(thread int) ([]model.Comment, error) {
 	return db.parseCommentsQuery(rows)
 }
 
-func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, error) {
+func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, ThreadMetaInfo, error) {
 	rows, err := db.database.Query(
-		"SELECT "+commentSelectFields+" FROM `comment`, `thread` where `comment`.`thread_id` = `thread`.`thread_id` AND path = ? ORDER BY `touched_at` DESC, `created_at` ASC LIMIT ?",
+		"SELECT `thread_id`, `num_total`, `num_root` FROM `thread` WHERE `path` = ?",
 		path,
+	)
+	defer rows.Close()
+	if err != nil {
+		return nil, ThreadMetaInfo{}, fmt.Errorf("failed to query database for thread: %w", err)
+	}
+
+	var (
+		threadId int
+		numTotal int
+		numRoot  int
+	)
+
+	if !rows.Next() {
+		// the thread does not exist
+		return []model.Comment{}, ThreadMetaInfo{}, nil
+	}
+
+	err = rows.Scan(&threadId, &numTotal, &numRoot)
+	if err != nil {
+		return nil, ThreadMetaInfo{}, fmt.Errorf("failed to scan fields for thread query: %w", err)
+	}
+
+	rows, err = db.database.Query(
+		"SELECT "+commentSelectFields+" FROM `comment` WHERE `thread_id` = ? ORDER BY `touched_at` DESC, `created_at` ASC LIMIT ?",
+		threadId,
 		limit,
 	)
 	defer rows.Close()
 
 	if err != nil {
-		return nil, err
+		return nil, ThreadMetaInfo{}, fmt.Errorf("failed to query database for comments: %w", err)
 	}
 
-	return db.parseCommentsQuery(rows)
+	comments, err := db.parseCommentsQuery(rows)
+
+	return comments, ThreadMetaInfo{
+		NumTotal: numTotal,
+		NumRoot:  numRoot,
+	}, err
 }
 
 func (db *DB) GetThreads() ([]model.Thread, error) {

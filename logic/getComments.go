@@ -6,18 +6,15 @@ import (
 	"github.com/matthinc/gomment/model"
 )
 
-func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft int) ([]model.CommentTree, int) {
+func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft int) []model.CommentTree {
 	subtrees := make([]model.CommentTree, 0)
-	total := 0
 
 	for _, comment := range comments {
 		if comment.ParentId == parentId {
 			var children []model.CommentTree
 
 			if depthLeft > 0 {
-				subtotal := 0
-				children, subtotal = constructTreeDepthFirst(comments, comment.Id, depthLeft-1)
-				total = total + subtotal
+				children = constructTreeDepthFirst(comments, comment.Id, depthLeft-1)
 			} else {
 				children = []model.CommentTree{}
 			}
@@ -26,20 +23,21 @@ func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft i
 		}
 	}
 
-	return subtrees, total + len(subtrees)
+	return subtrees
 }
 
 func (logic *BusinessLogic) GetNewestComments(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
-	orderedComments, err := logic.DB.GetNewestCommentsByPath(threadPath, maxCount)
+	orderedComments, metadata, err := logic.DB.GetNewestCommentsByPath(threadPath, maxCount)
 	if err != nil {
 		return model.CommentsResponse{}, fmt.Errorf("unable to get comments from database: %w", err)
 	}
 
-	subtrees, total := constructTreeDepthFirst(orderedComments, parentId, maxDepth)
+	subtrees := constructTreeDepthFirst(orderedComments, parentId, maxDepth)
 
 	return model.CommentsResponse{
-		Comments:    subtrees,
-		NumChildren: len(subtrees),
-		Total:       total,
+		Comments:       subtrees,
+		NumRoot:        metadata.NumRoot,
+		NumTotal:       metadata.NumTotal,
+		NumRootPayload: len(subtrees),
 	}, nil
 }

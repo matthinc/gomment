@@ -59,10 +59,12 @@ func TestRootComment(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, err := db.GetNewestCommentsByPath("/test-01", 100)
+	comments, metainfo, err := db.GetNewestCommentsByPath("/test-01", 100)
 	require.NoError(t, err)
 
-	require.Equal(t, 1, len(comments), "expected 1 comment to be in the database")
+	assert.Equal(t, 1, metainfo.NumTotal, "expected the thread to have 1 total comment")
+	assert.Equal(t, 1, metainfo.NumRoot, "expected the thread to have 1 root comment")
+	require.Equal(t, 1, len(comments), "expected 1 comment to be returned")
 
 	assert.Equal(t, comments[0].TouchedAt, comments[0].CreatedAt, "expected the touched_at time to be equal to created_at")
 	assert.Zero(t, comments[0].NumChildren)
@@ -116,8 +118,12 @@ func TestEmptyThread(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, err := db.GetNewestCommentsByPath("/foobar", 100)
+	comments, metainfo, err := db.GetNewestCommentsByPath("/foobar", 100)
 	require.NoError(t, err, "expected no error even if the path does not exist yet")
+
+	assert.Equal(t, 0, metainfo.NumTotal, "expected the thread to have 0 total comments")
+	assert.Equal(t, 0, metainfo.NumRoot, "expected the thread to have 0 root comments")
+
 	assert.Zero(t, len(comments), "expected comment list to be empty for non-existant path")
 }
 
@@ -154,8 +160,11 @@ func TestChildComment(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, err := db.GetNewestCommentsByPath("/test-03", 100)
+	comments, metainfo, err := db.GetNewestCommentsByPath("/test-03", 100)
 	require.NoError(t, err)
+
+	assert.Equal(t, 2, metainfo.NumTotal, "expected the thread to have 2 total comments")
+	assert.Equal(t, 1, metainfo.NumRoot, "expected the thread to have 1 root comment")
 
 	require.Equal(t, 2, len(comments), "expected 2 comment to be in the database")
 
@@ -215,8 +224,11 @@ func TestTwoChildComments(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, err := db.GetNewestCommentsByPath("/test-04", 100)
+	comments, metainfo, err := db.GetNewestCommentsByPath("/test-04", 100)
 	require.NoError(t, err)
+
+	assert.Equal(t, 3, metainfo.NumTotal, "expected the thread to have 3 total comments")
+	assert.Equal(t, 1, metainfo.NumRoot, "expected the thread to have 1 root comment")
 
 	require.Equal(t, 3, len(comments), "expected 3 comment to be in the database")
 
@@ -325,8 +337,12 @@ func TestNewestLimit(t *testing.T) {
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
 	for i := range [4]int{} {
-		comments, err := db.GetNewestCommentsByPath("/test-07", i)
+		comments, metainfo, err := db.GetNewestCommentsByPath("/test-07", i)
 		assert.NoError(t, err)
+
+		assert.Equal(t, 2, metainfo.NumTotal, "expected the thread to have 2 total comments")
+		assert.Equal(t, 2, metainfo.NumRoot, "expected the thread to have 2 root comment")
+
 		assert.Equal(t, min(i, 2), len(comments))
 	}
 }
@@ -389,8 +405,12 @@ func TestComplexTwoBranches(t *testing.T) {
 	orderedIds := []int64{rootComment2, leafComment2, rootComment1, leafComment1}
 
 	for i := range [6]int{} {
-		comments, err := db.GetNewestCommentsByPath("/test-08", i)
+		comments, metainfo, err := db.GetNewestCommentsByPath("/test-08", i)
 		require.NoError(t, err)
+
+		assert.Equal(t, 4, metainfo.NumTotal, "expected the thread to have 4 total comments")
+		assert.Equal(t, 2, metainfo.NumRoot, "expected the thread to have 2 root comments")
+
 		require.Equal(t, min(4, i), len(comments))
 
 		for idx, comment := range comments {
