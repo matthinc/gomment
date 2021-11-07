@@ -197,11 +197,10 @@ func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
 
 func (db *DB) QueryCommentsById(thread int) ([]model.Comment, error) {
 	rows, err := db.database.Query("SELECT "+commentSelectFields+" FROM `comment` where thread_id = ? ORDER BY created_at DESC", thread)
-	defer rows.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	return db.parseCommentsQuery(rows)
 }
@@ -211,10 +210,10 @@ func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, 
 		"SELECT `thread_id`, `num_total`, `num_root` FROM `thread` WHERE `path` = ?",
 		path,
 	)
-	defer rows.Close()
 	if err != nil {
 		return nil, ThreadMetaInfo{}, fmt.Errorf("failed to query database for thread: %w", err)
 	}
+	defer rows.Close()
 
 	var (
 		threadId int
@@ -237,11 +236,10 @@ func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, 
 		threadId,
 		limit,
 	)
-	defer rows.Close()
-
 	if err != nil {
 		return nil, ThreadMetaInfo{}, fmt.Errorf("failed to query database for comments: %w", err)
 	}
+	defer rows.Close()
 
 	comments, err := db.parseCommentsQuery(rows)
 
@@ -317,7 +315,10 @@ func (db *DB) GetMoreNewestSiblings(threadId int64, parentId int64, newestCreate
 }
 
 func (db *DB) GetThreads() ([]model.Thread, error) {
-	rows, _ := db.database.Query("SELECT `thread_id`, `path` FROM `thread`")
+	rows, err := db.database.Query("SELECT `thread_id`, `path` FROM `thread`")
+	if err != nil {
+		return nil, fmt.Errorf("failed to query database for thread: %w", err)
+	}
 	defer rows.Close()
 
 	response := make([]model.Thread, 0)
