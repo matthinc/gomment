@@ -34,7 +34,8 @@
  * @property {HTMLElement | null} elDate - .
  * @property {HTMLElement | null} elText - .
  * @property {HTMLElement | null} elReply - .
- * @property {HTMLElement | null} elShowMore - .
+ * @property {HTMLElement | null} elMoreSiblings - .
+ * @property {HTMLElement | null} elMoreChildren - .
  * @property {HTMLElement} elChildren - .
  */
 
@@ -179,15 +180,6 @@ export class Gomment {
   }
 
   /**
-   * Load child comments.
-   * @param {CommentTreeNode} parent - The parent node for which to load the children.
-   * @returns {void}
-   */
-  loadChildren(parent) {
-    console.warn('TODO: loadChildren')
-  }
-
-  /**
    * Load 'more' sibling comments.
    * @param {CommentTreeNode} parent - The parent for which to load more comments.
    * @returns {void}
@@ -196,9 +188,13 @@ export class Gomment {
     const childComments = parent.children;
     // order the id's ascending - as required by the API
     const excludeIds = childComments.map(c => c.comment.comment_id).sort((a, b) => a - b).join(',');
+
+    // only load comments older than the newest comment. if no comment
+    // is present take an arbitrary high number
     const newestCreatedAt = childComments.reduce((previous, current) => {
       return Math.max(previous, current.comment.created_at);
-    }, 0);
+    }, 0) || 0x7FFFFFFFFFFFF;
+
     window
       .fetch(`${this.apiURL}more_comments?threadId=${this.threadId}&parentId=${parent.comment.comment_id}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
       .then(rawData => rawData.json())
@@ -242,7 +238,8 @@ export class Gomment {
       elDate,
       elText,
       elReply,
-      elShowMore: null,
+      elMoreSiblings: null,
+      elMoreChildren: null,
       elChildren,
     };
   }
@@ -279,26 +276,30 @@ export class Gomment {
 
     // "show more" button
     if (parentNode.children.length > 0) {
-      if (parentNode.comment.num_children > parentNode.children.length) {
-        parentNode.dom.elShowMore = insertElement('div', 'gomment-show-more-container', parentNode.dom.elRoot);
-        insertElement('button', 'gomment-show-more-button', parentNode.dom.elShowMore, {
+      if (!parentNode.dom.elMoreSiblings && parentNode.comment.num_children > parentNode.children.length) {
+        parentNode.dom.elMoreSiblings = insertElement('div', 'gomment-show-more-container', parentNode.dom.elRoot);
+        insertElement('button', 'gomment-show-more-button', parentNode.dom.elMoreSiblings, {
           innerHTML: this.i18n.show_more,
           onclick: () => this.loadMoreSiblings(parentNode),
         });
-      } else if(parentNode.dom.elShowMore) {
-        const el = parentNode.dom.elShowMore;
+      } else if(parentNode.dom.elMoreSiblings) {
+        const el = parentNode.dom.elMoreSiblings;
         el.parentElement.removeChild(el);
-        parentNode.dom.elShowMore = null;
+        parentNode.dom.elMoreSiblings = null;
       }
     }
 
     // "load children" button
-    if (parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
+    if (!parentNode.dom.elMoreChildren && parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
       // No children but hasChildren -> Load more button
-      insertElement('button', 'gomment-show-more-depth-button', parentNode.dom.elChildren, {
+      parentNode.dom.elMoreChildren = insertElement('button', 'gomment-show-more-depth-button', parentNode.dom.elChildren, {
         innerHTML: this.i18n.show_more_depth,
-        onclick: () => this.loadChildren(parentNode)
+        onclick: () => this.loadMoreSiblings(parentNode)
       });
+    } else if (parentNode.dom.elMoreChildren) {
+      const el = parentNode.dom.elMoreChildren
+      el.parentElement.removeChild(el);
+      parentNode.dom.elMoreChildren = null;
     }
   }
 
