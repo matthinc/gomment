@@ -19,10 +19,11 @@
 /**
  * A response returned by the backend for a comment query.
  * @typedef {Object} CommentQueryResponse
- * @property {Array<CommentTreeNode>} comments The queried comments.
- * @property {number} num_total The total amount of comments available in the thread.
- * @property {number} num_root The amount of root comments.
- * @property {number} num_root_payload The amount of comments returned by the query.
+ * @property {Array<CommentTreeNode>} comments - The queried comments.
+ * @property {number} num_total - The total amount of comments available in the thread.
+ * @property {number} num_root - The amount of root comments.
+ * @property {number} num_root_payload - The amount of comments returned by the query.
+ * @property {number} thread_id - The identifier of this thread.
  */
 
 /**
@@ -33,6 +34,7 @@
  * @property {HTMLElement | null} elDate - .
  * @property {HTMLElement | null} elText - .
  * @property {HTMLElement | null} elReply - .
+ * @property {HTMLElement | null} elShowMore - .
  * @property {HTMLElement} elChildren - .
  */
 
@@ -120,6 +122,8 @@ export class Gomment {
     };
 
     // stateful information
+    /** @type {number | null} */
+    this.threadId = null;
     /** @type {HTMLElement | null} */
     this.submitButton = null;
     /** @type {HTMLElement | null} */
@@ -139,14 +143,13 @@ export class Gomment {
   }
 
   /**
-   * Set the total number of comments and the number of root comments
-   * and update the DOM elements respectively.
-   * @param {number} numTotal - The total number of availabe comments in this thread.
-   * @param {number} numRoot - The number of available root comments in this thread.
+   * Set various thread attributes and update the DOM accordingly.
+   * @param {CommentQueryResponse} queryResponse - The response for querying comments initially.
    */
-  setTotalComments(numTotal, numRoot) {
-    this.numTotal = numTotal;
-    this.rootNode.comment.num_children = numRoot;
+  setThreadMetadata(queryResponse) {
+    this.numTotal = queryResponse.num_total;
+    this.rootNode.comment.num_children = queryResponse.num_root;
+    this.threadId = queryResponse.thread_id;
     console.warn("TODO: update DOM in setTotalComments");
   }
 
@@ -160,7 +163,7 @@ export class Gomment {
     window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`)
       .then(rawData => rawData.json())
       .then(/** @type {function(CommentQueryResponse): void} */ jsonData => {
-        this.setTotalComments(jsonData.num_total, jsonData.num_root);
+        this.setThreadMetadata(jsonData);
         this.rootNode.children = jsonData.comments;
 
         this.renderComment(this.rootNode);
@@ -186,20 +189,30 @@ export class Gomment {
 
   /**
    * Load 'more' sibling comments.
-   * @param {number} parentId - The parent for which to load more comments.
+   * @param {CommentTreeNode} parent - The parent for which to load more comments.
    * @returns {void}
    */
-  loadMoreSiblings(parentId) {
-    const childComments = this.getLoadedChildComments(parentId);
-    const excludeIds = childComments.map(c => c.comment_id).join(',');
+  loadMoreSiblings(parent) {
+    const childComments = parent.children;
+    // order the id's ascending - as required by the API
+    const excludeIds = childComments.map(c => c.comment.comment_id).sort((a, b) => a - b).join(',');
     const newestCreatedAt = childComments.reduce((previous, current) => {
-      return Math.max(previous, current.created_at);
+      return Math.max(previous, current.comment.created_at);
     }, 0);
     window
-      .fetch(`${this.apiURL}more_comments?threadId=${threadId}&parentId=${parentId}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
+      .fetch(`${this.apiURL}more_comments?threadId=${this.threadId}&parentId=${parent.comment.comment_id}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
       .then(rawData => rawData.json())
-      .then(jsonData => {
-        console.log(jsonData);
+      .then(/** @type {function(Array<CommentModel>): void} */ comments => {
+        comments.forEach(c => {
+          /** @type {CommentTreeNode} */
+          const treeNode = {
+            comment: c,
+            children: [],
+            dom: null,
+          };
+          parent.children.push(treeNode);
+        });
+        this.renderComment(parent);
       });
   }
 
@@ -229,6 +242,7 @@ export class Gomment {
       elDate,
       elText,
       elReply,
+      elShowMore: null,
       elChildren,
     };
   }
@@ -264,12 +278,18 @@ export class Gomment {
     });
 
     // "show more" button
-    if (parentNode.children.length > 0 && parentNode.comment.num_children > parentNode.children.length) {
-      const showMoreContainer = insertElement('div', 'gomment-show-more-container', parentNode.dom.elRoot);
-      insertElement('button', 'gomment-show-more-button', showMoreContainer, {
-        innerHTML: this.i18n.show_more,
-        onclick: () => this.loadMoreSiblings(parentNode),
-      });
+    if (parentNode.children.length > 0) {
+      if (parentNode.comment.num_children > parentNode.children.length) {
+        parentNode.dom.elShowMore = insertElement('div', 'gomment-show-more-container', parentNode.dom.elRoot);
+        insertElement('button', 'gomment-show-more-button', parentNode.dom.elShowMore, {
+          innerHTML: this.i18n.show_more,
+          onclick: () => this.loadMoreSiblings(parentNode),
+        });
+      } else if(parentNode.dom.elShowMore) {
+        const el = parentNode.dom.elShowMore;
+        el.parentElement.removeChild(el);
+        parentNode.dom.elShowMore = null;
+      }
     }
 
     // "load children" button

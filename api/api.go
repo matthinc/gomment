@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -30,6 +31,37 @@ func getIntQueryParameter(c *gin.Context, parameter string, defaultValue int) in
 	}
 
 	return value
+}
+
+func getInt64QueryParameter(c *gin.Context, parameter string, defaultValue int64) int64 {
+	queryParameters := c.Request.URL.Query()
+
+	value := defaultValue
+	valueStr, hasValue := queryParameters[parameter]
+	if hasValue {
+		value, _ = strconv.ParseInt(valueStr[0], 10, 64)
+	}
+
+	return value
+}
+
+func getInt64ListQueryParameter(c *gin.Context, parameter string) []int64 {
+	queryParameters := c.Request.URL.Query()
+
+	ret := make([]int64, 0)
+
+	valueStr, hasValue := queryParameters[parameter]
+	if hasValue {
+		stringList := strings.Split(valueStr[0], ",")
+		for _, s := range stringList {
+			value, err := strconv.ParseInt(s, 10, 64)
+			if err == nil {
+				ret = append(ret, value)
+			}
+		}
+	}
+
+	return ret
 }
 
 func getStringQueryParameter(c *gin.Context, parameter string) (string, error) {
@@ -102,6 +134,7 @@ func StartApi(logic *logic.BusinessLogic) {
 	v1 := router.Group("/api/v1")
 	v1.GET("/status", injectLogic(routeStatus, logic))
 	v1.GET("/comments", injectLogic(routeGetComments, logic))
+	v1.GET("/more_comments", injectLogic(routeGetMoreComments, logic))
 	v1.POST("/comment", injectLogic(routePostComment, logic))
 
 	if len(logic.PwHash) > 0 {

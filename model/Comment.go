@@ -29,6 +29,7 @@ type CommentsResponse struct {
 	NumRoot        int           `json:"num_root"`
 	NumTotal       int           `json:"num_total"`
 	NumRootPayload int           `json:"num_root_payload"`
+	ThreadId       int64         `json:"thread_id"`
 }
 
 type Thread struct {

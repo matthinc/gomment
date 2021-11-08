@@ -39,5 +39,15 @@ func (logic *BusinessLogic) GetNewestComments(threadPath string, parentId int, m
 		NumRoot:        metadata.NumRoot,
 		NumTotal:       metadata.NumTotal,
 		NumRootPayload: len(subtrees),
+		ThreadId:       metadata.ThreadId,
 	}, nil
+}
+
+func (logic *BusinessLogic) GetMoreNewestComments(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
+	orderedComments, err := logic.DB.GetMoreNewestSiblings(threadId, parentId, newestCreatedAt, excludeIds, limit)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get comments from database: %w", err)
+	}
+
+	return orderedComments, nil
 }

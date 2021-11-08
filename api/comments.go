@@ -76,3 +76,25 @@ func routeGetComments(c *gin.Context, logic *logic.BusinessLogic) {
 		c.String(http.StatusOK, preview)
 	}
 }
+
+func routeGetMoreComments(c *gin.Context, logic *logic.BusinessLogic) {
+	// Optional query parameters
+	threadId := getInt64QueryParameter(c, "threadId", 0)
+	parentId := getInt64QueryParameter(c, "parentId", 0)
+	newestCreatedAt := getInt64QueryParameter(c, "newestCreatedAt", 0)
+	excludeIds := getInt64ListQueryParameter(c, "excludeIds")
+	limit := getIntQueryParameter(c, "limit", 0)
+
+	// Query comments tree
+	comments, err := logic.GetMoreNewestComments(threadId, parentId, newestCreatedAt, excludeIds, limit)
+	if err != nil {
+		log.Error("routeGetComments", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"status": "error",
+		})
+		return
+	}
+
+	commentsJson, _ := json.Marshal(comments)
+	c.String(http.StatusOK, string(commentsJson))
+}

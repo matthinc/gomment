@@ -7,6 +7,7 @@ import (
 type ThreadMetaInfo struct {
 	NumTotal int
 	NumRoot  int
+	ThreadId int64
 }
 
 type Persistence interface {

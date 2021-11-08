@@ -216,7 +216,7 @@ func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, 
 	defer rows.Close()
 
 	var (
-		threadId int
+		threadId int64
 		numTotal int
 		numRoot  int
 	)
@@ -246,6 +246,7 @@ func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, 
 	return comments, ThreadMetaInfo{
 		NumTotal: numTotal,
 		NumRoot:  numRoot,
+		ThreadId: threadId,
 	}, err
 }
 
