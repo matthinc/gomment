@@ -136,7 +136,7 @@
     cursor: pointer;
 }
 
-.gomment > .gomment-comments > .gomment-show-more-container > .gomment-show-more-button {
+.gomment-comments > .gomment-show-more-container > .gomment-show-more-button, .gomment-comment > .gomment-show-more-container > .gomment-show-more-button {
     margin-top: 5px;
     color: #00bbff;
     background-color: transparent;
@@ -145,6 +145,6 @@
     cursor: pointer;
 }
 
-.gomment > .gomment-comments > .gomment-show-more-container > .gomment-show-more-button:hover {
+.gomment-comments > .gomment-show-more-container > .gomment-show-more-button:hover, .gomment-comment > .gomment-show-more-container > .gomment-show-more-button:hover {
     text-decoration: underline;
 }

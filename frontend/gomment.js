@@ -1,25 +1,39 @@
 /**
- * A response returned by the backend for a comment query.
- * @typedef {Object} CommentQueryResponse
- * @property {Array<Comment>} comments The queried comments.
- * @property {number} total The amount of comments returned by the query.
- */
-
-/**
  * Content of a single comment.
- * @typedef {Object} CommentData
- * @property {number} comment_id Unique identifier for the comment.
- * @property {string} author The author of the comment.
- * @property {number} created_at Creation date of the comment.
- * @property {string} text The content of the comment.
- * @property {number} [num_children] The total number of availabe children, independent of the shown children.
+ * @typedef {Object} CommentModel
+ * @property {number} comment_id - Unique identifier for the comment.
+ * @property {string} author - The author of the comment.
+ * @property {number} created_at - Creation date of the comment.
+ * @property {string} text - The content of the comment.
+ * @property {number} num_children - The total number of availabe children, independent of the shown children.
  */
 
 /**
  * A comment response from the backend.
- * @typedef {Object} Comment
- * @property {CommentData} [comment] The actual comment data (content).
- * @property {Array<Comment>} [children] Children comments of this comment.
+ * @typedef {Object} CommentTreeNode
+ * @property {CommentModel} comment - The actual comment data (content).
+ * @property {Array<CommentTreeNode>} children - Children comments of this comment.
+ * @property {CommentDom} dom - The DOM node the comment was rendered into, null otherwise.
+ */
+
+/**
+ * A response returned by the backend for a comment query.
+ * @typedef {Object} CommentQueryResponse
+ * @property {Array<CommentTreeNode>} comments The queried comments.
+ * @property {number} num_total The total amount of comments available in the thread.
+ * @property {number} num_root The amount of root comments.
+ * @property {number} num_root_payload The amount of comments returned by the query.
+ */
+
+/**
+ * An element representing a DOM node for a comment, containing references to the most important elements.
+ * @typedef {Object} CommentDom
+ * @property {HTMLElement} elRoot - .
+ * @property {HTMLElement | null} elAuthor - .
+ * @property {HTMLElement | null} elDate - .
+ * @property {HTMLElement | null} elText - .
+ * @property {HTMLElement | null} elReply - .
+ * @property {HTMLElement} elChildren - .
  */
 
 /**
@@ -42,7 +56,9 @@ function insertElement(type, className, parent, attributes = {}) {
     // @ts-ignore
     elem[key] = attributes[key];
   }
-  parent.appendChild(elem);
+  if(parent) {
+    parent.appendChild(elem);
+  }
   return elem;
 }
 
@@ -83,7 +99,7 @@ export class Gomment {
     /** @type {number} */
     this.batchSize = options.batchSize || 10;
     /** @type {number} */
-    this.maxDepth = options.maxDepth || 2;
+    this.maxDepth = options.maxDepth || 6;
 
     // i18n
     this.i18n = options.i18n || {
@@ -104,26 +120,34 @@ export class Gomment {
     };
 
     // stateful information
-    /** @type {?} */
-    this.comments = [];
-    /** @type {HTMLElement | null} */
-    this.commentsElement = null;
     /** @type {HTMLElement | null} */
     this.submitButton = null;
     /** @type {HTMLElement | null} */
     this.replyIndicator = null;
     /** @type {HTMLElement | null} */
     this.newButton = null;
+    /** @type {CommentTreeNode | null} */
+    this.rootNode = {
+      comment: {
+        num_children: 0,
+      },
+      children: [],
+      dom: null,
+    };
+    /** @type {number} */
+    this.numTotal = 0;
   }
 
   /**
-   * Query for comments with the specified parameters.
-   * @param {number} max - Maximum amount of comments to query.
-   * @param {number} depth - Maximum level of depth to query.
-   * @returns {Promise<Response>} - HTML Response.
+   * Set the total number of comments and the number of root comments
+   * and update the DOM elements respectively.
+   * @param {number} numTotal - The total number of availabe comments in this thread.
+   * @param {number} numRoot - The number of available root comments in this thread.
    */
-  queryComments(max, depth) {
-    return window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`);
+  setTotalComments(numTotal, numRoot) {
+    this.numTotal = numTotal;
+    this.rootNode.comment.num_children = numRoot;
+    console.warn("TODO: update DOM in setTotalComments");
   }
 
   /**
@@ -133,18 +157,14 @@ export class Gomment {
    * @returns {void}
    */
   loadComments(max, depth) {
-    /** @type {(data: CommentQueryResponse) => void} */
-    const handler = (data) => {
-      data.comments.forEach(
-        /** @type {(item: Comment, index: number) => any} */
-        (item, index) => this.comments[index] = item
-      );
-      this.renderComments(this.comments, data.total);
-    };
+    window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`)
+      .then(rawData => rawData.json())
+      .then(/** @type {function(CommentQueryResponse): void} */ jsonData => {
+        this.setTotalComments(jsonData.num_total, jsonData.num_root);
+        this.rootNode.children = jsonData.comments;
 
-    this.queryComments(max, depth)
-      .then(data => data.json())
-      .then(handler);
+        this.renderComment(this.rootNode);
+      });
   }
 
   /**
@@ -156,97 +176,108 @@ export class Gomment {
   }
 
   /**
-   * Reload comments with current parameters
+   * Load child comments.
+   * @param {CommentTreeNode} parent - The parent node for which to load the children.
    * @returns {void}
    */
-  reloadComments() {
-    this.loadComments(this.batchSize, this.maxDepth);
+  loadChildren(parent) {
+    console.warn('TODO: loadChildren')
   }
 
   /**
-   * Load 'more' comments.
+   * Load 'more' sibling comments.
+   * @param {number} parentId - The parent for which to load more comments.
    * @returns {void}
    */
-  loadNextBatch() {
-    this.loadComments(this.batchSize, this.maxDepth);
+  loadMoreSiblings(parentId) {
+    const childComments = this.getLoadedChildComments(parentId);
+    const excludeIds = childComments.map(c => c.comment_id).join(',');
+    const newestCreatedAt = childComments.reduce((previous, current) => {
+      return Math.max(previous, current.created_at);
+    }, 0);
+    window
+      .fetch(`${this.apiURL}more_comments?threadId=${threadId}&parentId=${parentId}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
+      .then(rawData => rawData.json())
+      .then(jsonData => {
+        console.log(jsonData);
+      });
   }
 
   /**
-   * Load 'more' replies.
-   * @param {number} index - The comment to load more replies from.
-   * @param {number} depth - Maximum level of depth to query.
-   * @returns {void}
+   * Create a DOM node for displaying a comment and return references to specific elements.
+   * @param {boolean} isRootComment - indicates whether content-specific DOM element shall be omited.
+   * @returns {CommentDom}
    */
-  loadMoreDepth(index, depth) {
-    this.loadComments(index, 1, depth + this.batchSize);
+  createEmptyCommentDom(isRootComment) {
+    const elRoot = insertElement('div', isRootComment ? 'gomment-comments' : 'gomment-comment', null);
+
+    let elAuthor = null;
+    let elDate = null
+    let elText = null;
+    let elReply = null;
+    if (!isRootComment) {
+      elAuthor = insertElement('div', 'gomment-comment-author', elRoot);
+      elDate = insertElement('div', 'gomment-comment-date', elRoot);
+      elText = insertElement('div', 'gomment-comment-text', elRoot);
+      elReply = insertElement('a', 'gomment-comment-reply', elRoot, { innerHTML: this.i18n.reply });
+    }
+    const elChildren = insertElement('div', 'gomment-comment-children', elRoot);
+
+    return {
+      elRoot,
+      elAuthor,
+      elDate,
+      elText,
+      elReply,
+      elChildren,
+    };
   }
 
   /**
    * Render single comment and children recursively.
-   * @param {HTMLElement} parent - The comment tree parent.
-   * @param {Comment} comment - The offset.
-   * @param {number} treeIndex - The relative offset in the tree.
-   * @param {number} depth - Maximum level of depth to query.
+   * @param {CommentTreeNode} parentNode - The new comment to render.
    * @returns {void}
    */
-  renderComment(parent, comment, treeIndex, depth) {
-    let commentClass = 'gomment-comment';
-    if (comment.comment.comment_id === this.newComment) {
-      commentClass += ' gomment-comment-new';
-    }
-
-    const commentElement = insertElement('div', commentClass, parent);
-    insertElement('div', 'gomment-comment-author', commentElement, { innerHTML: comment.comment.author });
-    insertElement('div', 'gomment-comment-date', commentElement, { innerHTML: this.i18n.format_date(new Date(comment.comment.created_at * 1000)) });
-    insertElement('div', 'gomment-comment-text', commentElement, { innerHTML: comment.comment.text });
-
-    const replyButton = insertElement('a', 'gomment-comment-reply', commentElement, { innerHTML: this.i18n.reply });
-
-    const childrenElement = insertElement('div', 'gomment-comment-children', commentElement);
-
-    replyButton.onclick = () => {
-      this.moveCommentTarget(childrenElement, comment.comment.comment_id);
-    };
-
-    if (comment.children) {
-      for (const childComment of comment.children) {
-        this.renderComment(childrenElement, childComment, treeIndex, depth + 1);
+  renderComment(parentNode) {
+    parentNode.children.forEach(childNode => {
+      // skip if the child was already rendered
+      if(childNode.dom) {
+        return;
       }
-    }
-    if (comment.comment.num_children > comment.children.length) {
-      // No children but hasChildren -> Load more button
-      insertElement('button', 'gomment-show-more-depth-button', childrenElement, {
-        innerHTML: this.i18n.show_more_depth,
-        onclick: () => this.loadMoreDepth(treeIndex, depth)
-      });
-    }
-  }
 
-  /**
-   * Render all (top level) comments with children.
-   * @param {Array<Comment>} comments - The comments to render.
-   * @param {number} total
-   * @returns {void}
-   */
-  renderComments(comments, total) {
-    // Remove all comments from element
-    if (this.commentsElement === null) {
-      console.warn('Gomment instance needs to be injected before rendering.');
-      return;
-    }
-    /** @type {HTMLElement} */
-    const ce = this.commentsElement;
+      const dom = this.createEmptyCommentDom(false);
 
-    ce.innerHTML = '';
+      dom.elAuthor.innerHTML = childNode.comment.author;
+      dom.elDate.innerHTML = this.i18n.format_date(new Date(childNode.comment.created_at * 1000));
+      dom.elText.innerHTML = childNode.comment.text;
 
-    // Render comments
-    comments.forEach((comment, index) => this.renderComment(ce, comment, index, 0));
-    // Show more button
-    if (comments.length < total) {
-      const showMoreContainer = insertElement('div', 'gomment-show-more-container', ce);
+      dom.elReply.onclick = () => {
+        this.moveCommentTarget(dom.elChildren, childNode.comment.comment_id);
+      };
+
+      // attach child to the parent dom
+      childNode.dom = dom;
+      parentNode.dom.elChildren.appendChild(dom.elRoot);
+
+      // recurse over child
+      this.renderComment(childNode);
+    });
+
+    // "show more" button
+    if (parentNode.children.length > 0 && parentNode.comment.num_children > parentNode.children.length) {
+      const showMoreContainer = insertElement('div', 'gomment-show-more-container', parentNode.dom.elRoot);
       insertElement('button', 'gomment-show-more-button', showMoreContainer, {
         innerHTML: this.i18n.show_more,
-        onclick: () => this.loadNextBatch()
+        onclick: () => this.loadMoreSiblings(parentNode),
+      });
+    }
+
+    // "load children" button
+    if (parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
+      // No children but hasChildren -> Load more button
+      insertElement('button', 'gomment-show-more-depth-button', parentNode.dom.elChildren, {
+        innerHTML: this.i18n.show_more_depth,
+        onclick: () => this.loadChildren(parentNode)
       });
     }
   }
@@ -368,7 +399,8 @@ export class Gomment {
     this.moveCommentTarget(inputContainer, 0);
 
     // Comments section
-    this.commentsElement = insertElement('div', 'gomment-comments', container);
+    this.rootNode.dom = this.createEmptyCommentDom(true);
+    container.appendChild(this.rootNode.dom.elRoot);
 
     // Load and render comments
     this.loadCommentsInitial();
