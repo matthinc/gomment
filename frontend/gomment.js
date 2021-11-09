@@ -4,6 +4,7 @@
  * @property {number} comment_id - Unique identifier for the comment.
  * @property {string} author - The author of the comment.
  * @property {number} created_at - Creation date of the comment.
+ * @property {number} touched_at - Touch date of the comment.
  * @property {string} text - The content of the comment.
  * @property {number} num_children - The total number of availabe children, independent of the shown children.
  */
@@ -192,7 +193,7 @@ export class Gomment {
     // only load comments older than the newest comment. if no comment
     // is present take an arbitrary high number
     const newestCreatedAt = childComments.reduce((previous, current) => {
-      return Math.max(previous, current.comment.created_at);
+      return Math.max(previous, current.comment.touched_at);
     }, 0) || 0x7FFFFFFFFFFFF;
 
     window
