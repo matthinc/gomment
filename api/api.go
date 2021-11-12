@@ -133,9 +133,13 @@ func StartApi(logic *logic.BusinessLogic) {
 
 	v1 := router.Group("/api/v1")
 	v1.GET("/status", injectLogic(routeStatus, logic))
-	v1.GET("/comments", injectLogic(routeGetComments, logic))
-	v1.GET("/more_comments", injectLogic(routeGetMoreComments, logic))
+
+	// create comment
 	v1.POST("/comment", injectLogic(routePostComment, logic))
+
+	// newest branch first
+	v1.GET("/comments/nbf", injectLogic(routeGetCommentsNbf, logic))
+	v1.GET("/morecomments/nbf", injectLogic(routeGetMoreCommentsNbf, logic))
 
 	if len(logic.PwHash) > 0 {
 		// enable admin API routes

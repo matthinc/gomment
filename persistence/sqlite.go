@@ -195,17 +195,7 @@ func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
 	return response, nil
 }
 
-func (db *DB) QueryCommentsById(thread int) ([]model.Comment, error) {
-	rows, err := db.database.Query("SELECT "+commentSelectFields+" FROM `comment` where thread_id = ? ORDER BY created_at DESC", thread)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return db.parseCommentsQuery(rows)
-}
-
-func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, ThreadMetaInfo, error) {
+func (db *DB) GetCommentsNbf(path string, limit int) ([]model.Comment, ThreadMetaInfo, error) {
 	rows, err := db.database.Query(
 		"SELECT `thread_id`, `num_total`, `num_root` FROM `thread` WHERE `path` = ?",
 		path,
@@ -250,7 +240,7 @@ func (db *DB) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, 
 	}, err
 }
 
-func (db *DB) GetMoreNewestSiblings(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
+func (db *DB) GetMoreCommentsNbf(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
 	// precondition: excludeIds must be ordered asc
 	var lastId int64 = 0
 	for _, id := range excludeIds {

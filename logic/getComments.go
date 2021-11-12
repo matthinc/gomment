@@ -26,8 +26,8 @@ func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft i
 	return subtrees
 }
 
-func (logic *BusinessLogic) GetNewestComments(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
-	orderedComments, metadata, err := logic.DB.GetNewestCommentsByPath(threadPath, maxCount)
+func (logic *BusinessLogic) GetCommentsNbf(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+	orderedComments, metadata, err := logic.DB.GetCommentsNbf(threadPath, maxCount)
 	if err != nil {
 		return model.CommentsResponse{}, fmt.Errorf("unable to get comments from database: %w", err)
 	}
@@ -43,8 +43,8 @@ func (logic *BusinessLogic) GetNewestComments(threadPath string, parentId int, m
 	}, nil
 }
 
-func (logic *BusinessLogic) GetMoreNewestComments(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
-	orderedComments, err := logic.DB.GetMoreNewestSiblings(threadId, parentId, newestCreatedAt, excludeIds, limit)
+func (logic *BusinessLogic) GetMoreCommentsNbf(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
+	orderedComments, err := logic.DB.GetMoreCommentsNbf(threadId, parentId, newestCreatedAt, excludeIds, limit)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get comments from database: %w", err)
 	}

@@ -162,7 +162,7 @@ export class Gomment {
    * @returns {void}
    */
   loadComments(max, depth) {
-    window.fetch(`${this.apiURL}comments?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`)
+    window.fetch(`${this.apiURL}comments/nbf?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`)
       .then(rawData => rawData.json())
       .then(/** @type {function(CommentQueryResponse): void} */ jsonData => {
         this.setThreadMetadata(jsonData);
@@ -197,7 +197,7 @@ export class Gomment {
     }, 0) || 0x7FFFFFFFFFFFF;
 
     window
-      .fetch(`${this.apiURL}more_comments?threadId=${this.threadId}&parentId=${parent.comment.comment_id}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
+      .fetch(`${this.apiURL}morecomments/nbf?threadId=${this.threadId}&parentId=${parent.comment.comment_id}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
       .then(rawData => rawData.json())
       .then(/** @type {function(Array<CommentModel>): void} */ comments => {
         comments.forEach(c => {

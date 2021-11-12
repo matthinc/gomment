@@ -59,7 +59,7 @@ func TestRootComment(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetNewestCommentsByPath("/test-01", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/test-01", 100)
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, metainfo.NumTotal, "expected the thread to have 1 total comment")
@@ -118,7 +118,7 @@ func TestEmptyThread(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetNewestCommentsByPath("/foobar", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/foobar", 100)
 	require.NoError(t, err, "expected no error even if the path does not exist yet")
 
 	assert.Equal(t, 0, metainfo.NumTotal, "expected the thread to have 0 total comments")
@@ -160,7 +160,7 @@ func TestChildComment(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetNewestCommentsByPath("/test-03", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/test-03", 100)
 	require.NoError(t, err)
 
 	assert.Equal(t, 2, metainfo.NumTotal, "expected the thread to have 2 total comments")
@@ -224,7 +224,7 @@ func TestTwoChildComments(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetNewestCommentsByPath("/test-04", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/test-04", 100)
 	require.NoError(t, err)
 
 	assert.Equal(t, 3, metainfo.NumTotal, "expected the thread to have 3 total comments")
@@ -337,7 +337,7 @@ func TestNewestLimit(t *testing.T) {
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
 	for i := range [4]int{} {
-		comments, metainfo, err := db.GetNewestCommentsByPath("/test-07", i)
+		comments, metainfo, err := db.GetCommentsNbf("/test-07", i)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, metainfo.NumTotal, "expected the thread to have 2 total comments")
@@ -405,7 +405,7 @@ func TestComplexTwoBranches(t *testing.T) {
 	orderedIds := []int64{rootComment2, leafComment2, rootComment1, leafComment1}
 
 	for i := range [6]int{} {
-		comments, metainfo, err := db.GetNewestCommentsByPath("/test-08", i)
+		comments, metainfo, err := db.GetCommentsNbf("/test-08", i)
 		require.NoError(t, err)
 
 		assert.Equal(t, 4, metainfo.NumTotal, "expected the thread to have 4 total comments")
@@ -446,7 +446,7 @@ func TestMoreSiblingsSimple(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, rootComment2, "expected comment id to be not zero")
 
-	comments, err := db.GetMoreNewestSiblings(1, 0, 2, []int64{rootComment2}, 1)
+	comments, err := db.GetMoreCommentsNbf(1, 0, 2, []int64{rootComment2}, 1)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(comments), "expected one sibling comment to be returned")
 
@@ -466,7 +466,7 @@ func TestMoreSiblingsUnordered(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	comments, err := db.GetMoreNewestSiblings(1, 0, 2, []int64{2, 1}, 1)
+	comments, err := db.GetMoreCommentsNbf(1, 0, 2, []int64{2, 1}, 1)
 	assert.Error(t, err, "expected error when excludeIds parameter is not ordered")
 	assert.Equal(t, 0, len(comments))
 }
@@ -505,7 +505,7 @@ func TestMoreSiblingsExcludeMiddle(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, rootComment3, "expected comment id to be not zero")
 
-	comments, err := db.GetMoreNewestSiblings(1, 0, 3, []int64{rootComment2}, 99)
+	comments, err := db.GetMoreCommentsNbf(1, 0, 3, []int64{rootComment2}, 99)
 	require.NoError(t, err)
 	require.Equal(t, 2, len(comments), "expected two sibling comments to be returned")
 
@@ -547,7 +547,7 @@ func TestMoreSiblingsIgnoreYounger(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, rootComment3, "expected comment id to be not zero")
 
-	comments, err := db.GetMoreNewestSiblings(1, 0, 2, []int64{rootComment2}, 1)
+	comments, err := db.GetMoreCommentsNbf(1, 0, 2, []int64{rootComment2}, 1)
 	require.NoError(t, err)
 	require.Equal(t, 1, len(comments), "expected one sibling comment to be returned")
 

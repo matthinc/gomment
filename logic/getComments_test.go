@@ -22,7 +22,7 @@ func (db *MockDb) CreateComment(commentCreation *model.CommentCreation, createdA
 	db.creations = append(db.creations, *commentCreation)
 	return 0, nil
 }
-func (db *MockDb) GetNewestCommentsByPath(path string, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
+func (db *MockDb) GetCommentsNbf(path string, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
 	numRoot := 0
 
 	for _, comment := range db.comments {
@@ -36,7 +36,7 @@ func (db *MockDb) GetNewestCommentsByPath(path string, limit int) ([]model.Comme
 		NumRoot:  numRoot,
 	}, nil
 }
-func (db *MockDb) GetMoreNewestSiblings(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
+func (db *MockDb) GetMoreCommentsNbf(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
 	return db.comments, nil
 }
 func (db *MockDb) GetThreads() ([]model.Thread, error) { return []model.Thread{}, nil }
@@ -56,7 +56,7 @@ func TestSimple(t *testing.T) {
 	}
 	sut := logic.Create(&db, "")
 
-	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
+	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, commentResponse.NumTotal, "expected the total number of comments to be 1")
@@ -92,7 +92,7 @@ func TestTwoRootComments(t *testing.T) {
 	}
 	sut := logic.Create(&db, "")
 
-	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
+	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
 
 	assert.Equal(t, 2, commentResponse.NumTotal, "expected the total number of comments to be 2")
@@ -131,7 +131,7 @@ func TestTwoChainedComments(t *testing.T) {
 	}
 	sut := logic.Create(&db, "")
 
-	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
+	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
 
 	assert.Equal(t, 2, commentResponse.NumTotal, "expected the total number of comments to be 2")
@@ -190,7 +190,7 @@ func TestTwoChains(t *testing.T) {
 	}
 	sut := logic.Create(&db, "")
 
-	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
+	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
 
 	assert.Equal(t, 4, commentResponse.NumTotal, "expected the total number of comments to be 4")
@@ -231,7 +231,7 @@ func TestLeafyChain(t *testing.T) {
 	}
 	sut := logic.Create(&db, "")
 
-	commentResponse, err := sut.GetNewestComments("", 0, 99, 99)
+	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
 
 	assert.Equal(t, 4, commentResponse.NumTotal, "expected the total number of comments to be 4")
