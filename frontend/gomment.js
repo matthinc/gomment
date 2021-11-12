@@ -14,7 +14,7 @@
  * @typedef {Object} CommentTreeNode
  * @property {CommentModel} comment - The actual comment data (content).
  * @property {Array<CommentTreeNode>} children - Children comments of this comment.
- * @property {CommentDom} dom - The DOM node the comment was rendered into, null otherwise.
+ * @property {CommentDom | null} dom - The DOM node the comment was rendered into, null otherwise.
  */
 
 /**
@@ -44,7 +44,7 @@
  * Creates a new element and inserts it as the child of parent.
  * @param {string} type - Type of the new DOM element.
  * @param {string} className - Name of the class to assign to the newly created element.
- * @param {HTMLElement} parent - The new parent of the DOM element.
+ * @param {HTMLElement | null} parent - The new parent of the DOM element, null if it should not be attached to a parent.
  * @param {*} attributes - Attributes to assign to the new DOM element.
  * @returns {HTMLElement} The newly created child.
  */
@@ -132,10 +132,15 @@ export class Gomment {
     this.replyIndicator = null;
     /** @type {HTMLElement | null} */
     this.newButton = null;
-    /** @type {CommentTreeNode | null} */
+    /** @type {CommentTreeNode} */
     this.rootNode = {
       comment: {
         num_children: 0,
+        comment_id: 0,
+        created_at: 0,
+        touched_at: 0,
+        author: '',
+        text: '',
       },
       children: [],
       dom: null,
@@ -251,6 +256,11 @@ export class Gomment {
    * @returns {void}
    */
   renderComment(parentNode) {
+    const parentDom = parentNode.dom;
+    if (!parentDom) {
+      throw new Error('failed precondition: parent DOM must be created before rendering child comment');
+    }
+
     parentNode.children.forEach(childNode => {
       // skip if the child was already rendered
       if(childNode.dom) {
@@ -258,6 +268,9 @@ export class Gomment {
       }
 
       const dom = this.createEmptyCommentDom(false);
+      if (!dom.elAuthor || !dom.elDate || !dom.elText || !dom.elReply) {
+        throw new Error('failed to create comment DOM element');
+      }
 
       dom.elAuthor.innerHTML = childNode.comment.author;
       dom.elDate.innerHTML = this.i18n.format_date(new Date(childNode.comment.created_at * 1000));
@@ -269,7 +282,7 @@ export class Gomment {
 
       // attach child to the parent dom
       childNode.dom = dom;
-      parentNode.dom.elChildren.appendChild(dom.elRoot);
+      parentDom.elChildren.appendChild(dom.elRoot);
 
       // recurse over child
       this.renderComment(childNode);
@@ -277,30 +290,30 @@ export class Gomment {
 
     // "show more" button
     if (parentNode.children.length > 0) {
-      if (!parentNode.dom.elMoreSiblings && parentNode.comment.num_children > parentNode.children.length) {
-        parentNode.dom.elMoreSiblings = insertElement('div', 'gomment-show-more-container', parentNode.dom.elRoot);
-        insertElement('button', 'gomment-show-more-button', parentNode.dom.elMoreSiblings, {
+      if (!parentDom.elMoreSiblings && parentNode.comment.num_children > parentNode.children.length) {
+        parentDom.elMoreSiblings = insertElement('div', 'gomment-show-more-container', parentDom.elRoot);
+        insertElement('button', 'gomment-show-more-button', parentDom.elMoreSiblings, {
           innerHTML: this.i18n.show_more,
           onclick: () => this.loadMoreSiblings(parentNode),
         });
-      } else if(parentNode.dom.elMoreSiblings) {
-        const el = parentNode.dom.elMoreSiblings;
-        el.parentElement.removeChild(el);
-        parentNode.dom.elMoreSiblings = null;
+      } else if(parentDom.elMoreSiblings) {
+        const el = parentDom.elMoreSiblings;
+        el.parentElement && el.parentElement.removeChild(el);
+        parentDom.elMoreSiblings = null;
       }
     }
 
     // "load children" button
-    if (!parentNode.dom.elMoreChildren && parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
+    if (!parentDom.elMoreChildren && parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
       // No children but hasChildren -> Load more button
-      parentNode.dom.elMoreChildren = insertElement('button', 'gomment-show-more-depth-button', parentNode.dom.elChildren, {
+      parentDom.elMoreChildren = insertElement('button', 'gomment-show-more-depth-button', parentDom.elChildren, {
         innerHTML: this.i18n.show_more_depth,
         onclick: () => this.loadMoreSiblings(parentNode)
       });
-    } else if (parentNode.dom.elMoreChildren) {
-      const el = parentNode.dom.elMoreChildren
-      el.parentElement.removeChild(el);
-      parentNode.dom.elMoreChildren = null;
+    } else if (parentDom.elMoreChildren) {
+      const el = parentDom.elMoreChildren
+      el.parentElement && el.parentElement.removeChild(el);
+      parentDom.elMoreChildren = null;
     }
   }
 
@@ -330,7 +343,6 @@ export class Gomment {
         .then(response => response.json())
         .then(data => {
           this.newComment = data.id;
-          this.reloadComments();
         });
 
     } else {
