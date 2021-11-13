@@ -99,6 +99,10 @@
     max-width: 700px;
 }
 
+.gmnt-c--highlight {
+    background-color: #ffff001c;
+}
+
 .gmnt-c__date {
     display: inline;
     font-size: 12px;

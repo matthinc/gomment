@@ -510,6 +510,8 @@ export class Gomment {
 
         // enable all elements in the end
         elements.forEach(e => e.disabled = false);
+
+        this.insertSentComment(this.replyRecipient, commentModel)
       })
       .catch(err => {
         if (err instanceof Error) {
@@ -522,6 +524,31 @@ export class Gomment {
         // enable all elements in the end
         elements.forEach(e => e.disabled = false);
       });
+  }
+
+  /**
+   * Insert and render a comment in the tree after successfully submitting it.
+   * @param {CommentTreeNode} parent - The parent for which to insert the new child comment for.
+   * @param {CommentModel} comment - The new comment to insert.
+   * @returns {void}
+   */
+  insertSentComment(parent, comment) {
+    /** @type {CommentTreeNode} */
+    const childNode = {
+      comment,
+      children: [],
+      dom: null,
+    };
+    parent.children.unshift(childNode);
+    this.renderComment(parent);
+
+    /** @type {CommentDom | null} */
+    const newDom = childNode.dom;
+    if (newDom === null) {
+      throw new Error('postcondition failed: child DOM must be present after rendering');
+    }
+
+    newDom.elRoot.classList.add('gmnt-c--highlight');
   }
 
   /**
