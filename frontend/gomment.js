@@ -130,6 +130,7 @@ export class Gomment {
       alert_missing_information: 'Please fill out all required fields!',
       reply: 'Reply',
       new_comment: 'Write comment',
+      network_error: 'A network error occured',
       /** @type {(date: Date) => string} */
       format_date: defaultDateTransformer
     };
@@ -484,7 +485,12 @@ export class Gomment {
         elements.forEach(e => e.disabled = false);
       })
       .catch(err => {
-        d.elError.innerText = err.toString();
+        if (err instanceof Error) {
+          console.error(err);
+          d.elError.innerText = this.i18n.network_error;
+        } else {
+          d.elError.innerText = err.toString();
+        }
 
         // enable all elements in the end
         elements.forEach(e => e.disabled = false);
