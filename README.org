@@ -1,7 +1,9 @@
 #+startup: indent
-* gomment - A simple comment microservice using Go and Docker
+* gomment - A lightweight commenting system using Go, SQLite and Vanilla JS
 [[https://api.travis-ci.com/matthinc/gomment.svg?branch=master]]
 [[https://img.shields.io/docker/image-size/matthinc/gomment.svg]]
+
+**Demo:**
 
 ** Why gomment?
 - *Lighweight* - The docker image is < 30MB, the JavaScript file is < 20kB (gzip < 5kB)
@@ -9,8 +11,6 @@
 - *Frontend-agnostic* - Use the default JavaScript frontend or build your own using the *gomment JSON API*
 - *Container-first* - gomment was built with *Docker* in mind from the first second
 - *Portable* - gomment uses a single SQLite file as its database
-
-** TODO Demo
 
 ** Contributing
 All contributions to the project are welcome. Make sure to read the project philosophy before submitting your contribution.
