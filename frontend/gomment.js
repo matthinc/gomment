@@ -286,9 +286,13 @@ export class Gomment {
       throw new Error('failed precondition: parent DOM must be created before rendering child comment');
     }
 
+    /** @type {CommentDom | null} */
+    let previousDom = null;
+
     parentNode.children.forEach(childNode => {
       // skip if the child was already rendered
       if(childNode.dom) {
+        previousDom = childNode.dom;
         return;
       }
 
@@ -307,36 +311,55 @@ export class Gomment {
 
       // attach child to the parent dom
       childNode.dom = dom;
-      parentDom.elChildren.appendChild(dom.elRoot);
+      if (previousDom === null) {
+        // insert before the first child of the parent
+        parentDom.elChildren.insertBefore(dom.elRoot, parentDom.elChildren.firstChild);
+      } else {
+        // insert before the next sibling of the previous sibling
+        parentDom.elChildren.insertBefore(dom.elRoot, previousDom.elRoot.nextSibling);
+      }
+
+      previousDom = dom;
 
       // recurse over child
       this.renderComment(childNode);
     });
 
     // "show more" button
-    if (parentNode.children.length > 0) {
-      if (!parentDom.elMoreSiblings && parentNode.comment.num_children > parentNode.children.length) {
-        parentDom.elMoreSiblings = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
-        insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreSiblings, {
-          innerHTML: this.i18n.show_more,
-          onclick: () => this.loadMoreSiblings(parentNode),
-        });
-      } else if(parentDom.elMoreSiblings) {
-        const el = parentDom.elMoreSiblings;
-        el.parentElement && el.parentElement.removeChild(el);
-        parentDom.elMoreSiblings = null;
-      }
+    const showMoreCondition = parentNode.children.length > 0 && parentNode.comment.num_children > parentNode.children.length;
+
+    // condition met, but element not rendered => render element
+    if (!parentDom.elMoreSiblings && showMoreCondition) {
+      parentDom.elMoreSiblings = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
+      insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreSiblings, {
+        innerHTML: this.i18n.show_more,
+        onclick: () => this.loadMoreSiblings(parentNode),
+      });
     }
 
+    // condition not met, but element rendered => remove element
+    if (parentDom.elMoreSiblings && !showMoreCondition) {
+      const el = parentDom.elMoreSiblings;
+      el.parentElement && el.parentElement.removeChild(el);
+      parentDom.elMoreSiblings = null;
+    }
+
+
     // "load children" button
-    if (!parentDom.elMoreChildren && parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
+    const loadChildrenCondition = parentNode.children.length === 0 && parentNode.comment.num_children > 0;
+
+    // condition met, but element not rendered => render element
+    if (!parentDom.elMoreChildren && loadChildrenCondition) {
       // No children but hasChildren -> Load more button
       parentDom.elMoreChildren = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
       insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreChildren, {
         innerHTML: this.i18n.show_more_depth,
         onclick: () => this.loadMoreSiblings(parentNode)
       });
-    } else if (parentDom.elMoreChildren) {
+    }
+
+    // condition not met, but element rendered => remove element
+    if (parentDom.elMoreChildren && !loadChildrenCondition) {
       const el = parentDom.elMoreChildren
       el.parentElement && el.parentElement.removeChild(el);
       parentDom.elMoreChildren = null;
