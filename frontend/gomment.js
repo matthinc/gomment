@@ -247,19 +247,19 @@ export class Gomment {
    * @returns {CommentDom}
    */
   createEmptyCommentDom(isRootComment) {
-    const elRoot = insertElement('div', isRootComment ? 'gomment-comments' : 'gomment-comment', null);
+    const elRoot = insertElement('div', isRootComment ? 'gmnt__comments' : 'gmnt-c', null);
 
     let elAuthor = null;
     let elDate = null
     let elText = null;
     let elReply = null;
     if (!isRootComment) {
-      elAuthor = insertElement('div', 'gomment-comment-author', elRoot);
-      elDate = insertElement('div', 'gomment-comment-date', elRoot);
-      elText = insertElement('div', 'gomment-comment-text', elRoot);
-      elReply = insertElement('a', 'gomment-comment-reply', elRoot, { innerHTML: this.i18n.reply });
+      elAuthor = insertElement('div', 'gmnt-c__author', elRoot);
+      elDate = insertElement('div', 'gmnt-c__date', elRoot);
+      elText = insertElement('div', 'gmnt-c__text', elRoot);
+      elReply = insertElement('a', 'gmnt-c__reply', elRoot, { innerHTML: this.i18n.reply });
     }
-    const elChildren = insertElement('div', 'gomment-comment-children', elRoot);
+    const elChildren = insertElement('div', 'gmnt-c__children', elRoot);
 
     return {
       elRoot,
@@ -314,8 +314,8 @@ export class Gomment {
     // "show more" button
     if (parentNode.children.length > 0) {
       if (!parentDom.elMoreSiblings && parentNode.comment.num_children > parentNode.children.length) {
-        parentDom.elMoreSiblings = insertElement('div', 'gomment-show-more-container', parentDom.elRoot);
-        insertElement('button', 'gomment-show-more-button', parentDom.elMoreSiblings, {
+        parentDom.elMoreSiblings = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
+        insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreSiblings, {
           innerHTML: this.i18n.show_more,
           onclick: () => this.loadMoreSiblings(parentNode),
         });
@@ -329,7 +329,8 @@ export class Gomment {
     // "load children" button
     if (!parentDom.elMoreChildren && parentNode.children.length === 0 && parentNode.comment.num_children > 0) {
       // No children but hasChildren -> Load more button
-      parentDom.elMoreChildren = insertElement('button', 'gomment-show-more-depth-button', parentDom.elChildren, {
+      parentDom.elMoreChildren = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
+      insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreChildren, {
         innerHTML: this.i18n.show_more_depth,
         onclick: () => this.loadMoreSiblings(parentNode)
       });
@@ -428,12 +429,12 @@ export class Gomment {
    * @returns {InputSectionDOM}
    */
   createInputSection() {
-    const elRoot = insertElement('div', 'gomment-input-section', null);
-    const elMail = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-email', elRoot, { placeholder: this.i18n.placeholder_email }));
-    const elName = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-display-name', elRoot, { placeholder: this.i18n.placeholder_name }));
-    const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gomment-text-input', elRoot, { placeholder: this.i18n.placeholder_text }));
-    const elError = /** @type {HTMLInputElement} */ (insertElement('span', 'gomment-new-error', elRoot));
-    const elSubmit = /** @type {HTMLButtonElement} */ (insertElement('button', 'gomment-submit-button', elRoot, { innerHTML: this.i18n.submit}));
+    const elRoot = insertElement('div', 'gmnt-is', null);
+    const elMail = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__email', elRoot, { placeholder: this.i18n.placeholder_email }));
+    const elName = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__name', elRoot, { placeholder: this.i18n.placeholder_name }));
+    const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gmnt-is__content', elRoot, { placeholder: this.i18n.placeholder_text }));
+    const elError = /** @type {HTMLInputElement} */ (insertElement('span', 'gmnt-is__error', elRoot));
+    const elSubmit = /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt-is__submit', elRoot, { innerHTML: this.i18n.submit}));
 
     elSubmit.addEventListener('click', this.onSendComment.bind(this));
 
@@ -502,7 +503,7 @@ export class Gomment {
       if (!el || !(el instanceof HTMLElement)) {
         throw new Error('HTML element with the specifier "${element}" was not found.');
       }
-      container = insertElement('div', 'gomment', el);
+      container = insertElement('div', 'gmnt', el);
     } else if (element instanceof HTMLElement) {
       container = element;
     } else {
@@ -510,13 +511,13 @@ export class Gomment {
     }
 
     // Create container element
-    insertElement('div', 'gomment-title', container, { innerHTML: this.i18n.title });
+    insertElement('div', 'gmnt__title', container, { innerHTML: this.i18n.title });
 
     // create container at the top of the comments for the input section
-    const topInputSectionContainer = insertElement('div', 'gomment-new-comment-input-container', container);
+    const topInputSectionContainer = insertElement('div', 'gmnt__input-section-container', container);
 
     // create button for moving the comment section to the top level
-    const newButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gomment-new-comment', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
+    const newButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt__new-comment-btn', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
     newButton.addEventListener('click', e => {
       this.moveInputSection(topInputSectionContainer, 0);
     })

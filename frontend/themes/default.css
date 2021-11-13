@@ -1,38 +1,54 @@
-.gomment {
+.gmnt {
     width: 100%;
     font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial;
 }
 
-.gomment > .gomment-title {
-    padding: 10px;
+.gmnt__title {
+    padding: 8px;
+
     border-bottom: 1px solid #bebebe;
     font-size: 15px;
     color: black;
     font-weight: 700;
 }
 
-.gomment > .gomment-new-comment-input-container > .gomment-new-comment {
-    margin-top: 10px;
-    padding: 7px 15px 7px 15px;
+.gmnt__input-section-container {
+    padding-left: 8px;
+}
+
+.gmnt__new-comment-btn {
+    padding: 8px 16px;
+    margin-top: 16px;
+
     border: 1px solid #00bbff;
     background-color: transparent;
     color: #00bbff;
     cursor: pointer;
-    margin-right: 10px;
-    margin-left: 20px;
 }
 
-.gomment-input-section {
+.gmnt__comments {
+    padding-left: 8px;
+}
+
+.gmnt__comments > .gmnt-c__children {
+    border: none;
+}
+
+.gmnt__comments > .gmnt-c__children > .gmnt-c {
+    padding-left: 0;
+}
+
+/* is = input section */
+.gmnt-is {
     display: block;
     border: 1px solid #bebebe;
-    margin-top: 10px;
-    margin-left: 20px;
-    padding: 10px;
+    margin-top: 8px;
+    padding: 8px;
     width: 600px;
     max-width: calc(100% - 20px);
 }
 
-.gomment-input-section > input {
+.gmnt-is input {
     display: block;
     width: 100%;
     max-width: 300px;
@@ -41,36 +57,11 @@
     padding: 5px 7px 5px 7px;
 }
 
-.gomment-new-error {
-    display: block;
-    padding: 8px 0px;
-    font-size: 0.9em;
-    color: #ff0c00;
-}
-
-.gomment-input-section > button {
-    padding: 7px 15px 7px 15px;
-    background-color: #00bbff;
-    color: white;
-    border: none;
-    cursor: pointer;
-}
-
-.gomment-input-section > input:focus {
+.gmnt-is input:focus {
     border: 1px solid #00bbff;
 }
 
-.gomment-input-section > .gomment-reply {
-    margin-top: 5px;
-    font-size: 12px;
-}
-
-.gomment-input-section > .gomment-reply > .gomment-reply-recipient {
-    font-weight: bold;
-    color: #00bbff;
-}
-
-.gomment-input-section > textarea {
+.gmnt-is textarea {
     display: block;
     width: 100%;
     max-width: 500px;
@@ -79,42 +70,53 @@
     padding: 5px;
 }
 
-.gomment-input-section > textarea:focus {
+.gmnt-is textarea:focus {
     border: 1px solid #00bbff;
 }
 
-/////// Comments ////////
-
-.gomment > .gomment-comments {
-    display: inline-block;
-    padding: 20px;
+.gmnt-is button {
+    padding: 7px 15px 7px 15px;
+    background-color: #00bbff;
+    color: white;
+    border: none;
+    cursor: pointer;
 }
 
-.gomment-comment {
-    padding: 15px 0px 0px 20px;
+.gmnt-is__error {
+    display: block;
+    padding: 8px 0px;
+    font-size: 0.9em;
+    color: #ff0c00;
+}
+
+
+/* c = comment */
+.gmnt-c {
+    padding-left: 16px;
+    padding-top: 16px;
     max-width: 700px;
 }
 
-.gomment-comment > .gomment-comment-date {
+.gmnt-c__date {
     display: inline;
     font-size: 12px;
     margin-left: 10px;
     color: #555555;
 }
 
-.gomment-comment > .gomment-comment-author {
+.gmnt-c__author {
     display: inline;
     color: black;
     font-weight: bold;
     font-size: 14px
 }
 
-.gomment-comment > .gomment-comment-text {
+.gmnt-c__text {
     padding-top: 5px;
     font-size: 14px
 }
 
-.gomment-comment > .gomment-comment-reply {
+.gmnt-c__reply {
     display: inline-block;
     color: #00bbff;
     font-size: 12px;
@@ -122,34 +124,30 @@
     cursor: pointer;
 }
 
-.gomment-comment > .gomment-comment-reply:hover {
+.gmnt-c__reply:hover {
     text-decoration: underline;
 }
 
-.gomment-comment > .gomment-comment-children {
-    margin-top: 5px;
-    padding-left: 5px;
-    border-left: 5px solid #e0e0e0;
+.gmnt-c__children {
+    border-left: 4px solid #e0e0e0;
 }
 
-.gomment-comment > .gomment-comment-children > .gomment-show-more-depth-button {
-    margin-top: 5px;
+.gmnt-c__children > .gmnt-is {
+    margin-left: 16px;
+}
+
+.gmnt-c__show-more-container {
+    border-left: 4px solid #e0e0e0;
+    padding-left: 16px;
+}
+
+.gmnt-c__show-more-btn {
+    padding: 0;
+    margin-top: 8px;
+
     color: #00bbff;
     background-color: transparent;
     border: none;
     font-weight:bold;
     cursor: pointer;
-}
-
-.gomment-comments > .gomment-show-more-container > .gomment-show-more-button, .gomment-comment > .gomment-show-more-container > .gomment-show-more-button {
-    margin-top: 5px;
-    color: #00bbff;
-    background-color: transparent;
-    border: none;
-    font-weight:bold;
-    cursor: pointer;
-}
-
-.gomment-comments > .gomment-show-more-container > .gomment-show-more-button:hover, .gomment-comment > .gomment-show-more-container > .gomment-show-more-button:hover {
-    text-decoration: underline;
 }

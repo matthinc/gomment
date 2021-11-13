@@ -22,6 +22,10 @@ All contributions to the project are welcome. Make sure to read the project phil
 - The 3rd NF can be violated - Traversing trees in DBMS is expensive, keep it fast
 - System tests > unit test coverage - Users care /that/ it works, not /how/ it works
 
+*** Conventions and Standards
+- CSS identifier naming: [[http://getbem.com/naming/][BEM]]
+- JS type checking: Typescript
+
 ** Embedding
 
 #+BEGIN_SRC html
