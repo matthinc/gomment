@@ -9,6 +9,21 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type CommentRow struct {
+	CommentId   int64
+	ThreadId    int64
+	ParentId    sql.NullInt64
+	NumChildren int
+	DepthLevel  int
+	Verified    bool
+	CreatedAt   int64
+	EditedAt    sql.NullInt64
+	TouchedAt   int64
+	Author      string
+	Email       sql.NullString
+	Text        string
+}
+
 type DBError struct {
 	message string
 }
@@ -55,6 +70,7 @@ func (db *DB) Setup() (err error) {
 		"`thread_id` INTEGER NOT NULL, " +
 		"`parent_id` INTEGER DEFAULT NULL, " +
 		"`num_children` INTEGER NOT NULL DEFAULT 0, " +
+		"`depth_level` INTEGER NOT NULL DEFAULT 0, " +
 		"`verified` INTEGER NOT NULL DEFAULT 0, " +
 		"`created_at` INTEGER NOT NULL, " +
 		"`edited_at` INTEGER DEFAULT NULL, " +
@@ -100,8 +116,9 @@ func (db *DB) CreateComment(commentCreation *model.CommentCreation, createdAt in
 	}
 
 	res, err = transaction.Exec(
-		"INSERT INTO `comment` (`thread_id`, `parent_id`, `created_at`, `touched_at`, `author`, `email`, `text`) "+
-			"SELECT t1.`thread_id`, ?, ?, ?, ?, ?, ? FROM `thread` t1 WHERE t1.`path` = ?",
+		"INSERT INTO `comment` (`thread_id`, `parent_id`, `depth_level`, `created_at`, `touched_at`, `author`, `email`, `text`) "+
+			"SELECT t1.`thread_id`, ?, (SELECT ifnull(MAX(p.`depth_level`), -1) + 1 FROM `comment` p WHERE p.`comment_id` = ?), ?, ?, ?, ?, ? FROM `thread` t1 WHERE t1.`path` = ?",
+		parentId,
 		parentId,
 		createdAt,
 		createdAt,
@@ -328,4 +345,34 @@ func (db *DB) GetThreads() ([]model.Thread, error) {
 	}
 
 	return response, nil
+}
+
+func (db *DB) GetCommentRow(commentId int64) (CommentRow, error) {
+	rows, err := db.database.Query("SELECT * FROM `comment` WHERE `comment_id` = ?", commentId)
+	if err != nil {
+		return CommentRow{}, err
+	}
+
+	var ret CommentRow
+
+	rows.Next()
+	err = rows.Scan(
+		&ret.CommentId,
+		&ret.ThreadId,
+		&ret.ParentId,
+		&ret.NumChildren,
+		&ret.DepthLevel,
+		&ret.Verified,
+		&ret.CreatedAt,
+		&ret.EditedAt,
+		&ret.TouchedAt,
+		&ret.Author,
+		&ret.Email,
+		&ret.Text,
+	)
+	if err != nil {
+		return CommentRow{}, err
+	}
+
+	return ret, nil
 }

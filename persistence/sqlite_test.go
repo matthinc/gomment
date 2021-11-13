@@ -1,6 +1,7 @@
 package persistence_test
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -36,7 +37,13 @@ func createTestDatabase(testName string) (*persistence.DB, func(), error) {
 	}, nil
 }
 
-func TestRootComment(t *testing.T) {
+func assertDepth(t *testing.T, db *persistence.DB, commentId int, depth int) {
+	commentRow, err := db.GetCommentRow(int64(commentId))
+	require.NoError(t, err)
+	assert.Equal(t, depth, commentRow.DepthLevel, fmt.Sprintf("expected comment id %d to have depth %d, was %d", commentId, depth, commentRow.DepthLevel))
+}
+
+func TestNbfRootComment(t *testing.T) {
 	db, deleter, err := createTestDatabase("01")
 	if err != nil {
 		t.Fatal(err)
@@ -68,9 +75,11 @@ func TestRootComment(t *testing.T) {
 
 	assert.Equal(t, comments[0].TouchedAt, comments[0].CreatedAt, "expected the touched_at time to be equal to created_at")
 	assert.Zero(t, comments[0].NumChildren)
+
+	assertDepth(t, db, comments[0].Id, 0)
 }
 
-func TestNonExistingParent(t *testing.T) {
+func TestCreateNonExistingParent(t *testing.T) {
 	db, deleter, err := createTestDatabase("02")
 	if err != nil {
 		t.Fatal(err)
@@ -95,7 +104,7 @@ func TestNonExistingParent(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestEmptyThread(t *testing.T) {
+func TestNbfEmptyThread(t *testing.T) {
 	db, deleter, err := createTestDatabase("05")
 	if err != nil {
 		t.Fatal(err)
@@ -127,7 +136,7 @@ func TestEmptyThread(t *testing.T) {
 	assert.Zero(t, len(comments), "expected comment list to be empty for non-existant path")
 }
 
-func TestChildComment(t *testing.T) {
+func TestNbfChildComment(t *testing.T) {
 	db, deleter, err := createTestDatabase("03")
 	if err != nil {
 		t.Fatal(err)
@@ -179,9 +188,12 @@ func TestChildComment(t *testing.T) {
 
 	assert.Equal(t, 1, rootComment.NumChildren, "expected root comment to have one child")
 	assert.Equal(t, 0, leafComment.NumChildren, "expected leaf comment to have no children")
+
+	assertDepth(t, db, leafComment.Id, 1)
+	assertDepth(t, db, rootComment.Id, 0)
 }
 
-func TestTwoChildComments(t *testing.T) {
+func TestNbfTwoChildComments(t *testing.T) {
 	db, deleter, err := createTestDatabase("04")
 	if err != nil {
 		t.Fatal(err)
@@ -248,6 +260,10 @@ func TestTwoChildComments(t *testing.T) {
 	assert.Equal(t, 1, rootComment.NumChildren, "expected root comment to have one child")
 	assert.Equal(t, 1, midComment.NumChildren, "expected mid comment to have one child")
 	assert.Equal(t, 0, leafComment.NumChildren, "expected leaf comment to have no children")
+
+	assertDepth(t, db, rootComment.Id, 0)
+	assertDepth(t, db, midComment.Id, 1)
+	assertDepth(t, db, leafComment.Id, 2)
 }
 
 func TestAvailableThreads(t *testing.T) {
@@ -303,7 +319,7 @@ func TestAvailableThreads(t *testing.T) {
 	assert.ElementsMatch(t, []string{"/test-06-a", "/test-06-b"}, []string{threads[0].Path, threads[1].Path}, "expected two thread names to match")
 }
 
-func TestNewestLimit(t *testing.T) {
+func TestNbfNewestLimit(t *testing.T) {
 	db, deleter, err := createTestDatabase("07")
 	if err != nil {
 		t.Fatal(err)
@@ -348,7 +364,7 @@ func TestNewestLimit(t *testing.T) {
 }
 
 // create two branches with one child each, get latest two comments
-func TestComplexTwoBranches(t *testing.T) {
+func TestNbfComplexTwoBranches(t *testing.T) {
 	db, deleter, err := createTestDatabase("08")
 	if err != nil {
 		t.Fatal(err)
@@ -419,7 +435,7 @@ func TestComplexTwoBranches(t *testing.T) {
 	}
 }
 
-func TestMoreSiblingsSimple(t *testing.T) {
+func TestNbfMoreSiblingsSimple(t *testing.T) {
 	db, deleter, err := createTestDatabase("09")
 	if err != nil {
 		t.Fatal(err)
@@ -453,7 +469,7 @@ func TestMoreSiblingsSimple(t *testing.T) {
 	assert.Equal(t, 1, comments[0].Id, "expected loaded sibling to have id 1")
 }
 
-func TestMoreSiblingsUnordered(t *testing.T) {
+func TestNbfMoreSiblingsUnordered(t *testing.T) {
 	db, deleter, err := createTestDatabase("10")
 	if err != nil {
 		t.Fatal(err)
@@ -471,7 +487,7 @@ func TestMoreSiblingsUnordered(t *testing.T) {
 	assert.Equal(t, 0, len(comments))
 }
 
-func TestMoreSiblingsExcludeMiddle(t *testing.T) {
+func TestNbfMoreSiblingsExcludeMiddle(t *testing.T) {
 	db, deleter, err := createTestDatabase("11")
 	if err != nil {
 		t.Fatal(err)
@@ -513,7 +529,7 @@ func TestMoreSiblingsExcludeMiddle(t *testing.T) {
 	assert.Equal(t, 1, comments[1].Id, "expected first loaded sibling to have id 1")
 }
 
-func TestMoreSiblingsIgnoreYounger(t *testing.T) {
+func TestNbfMoreSiblingsIgnoreYounger(t *testing.T) {
 	db, deleter, err := createTestDatabase("12")
 	if err != nil {
 		t.Fatal(err)
