@@ -212,7 +212,7 @@ func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
 	return response, nil
 }
 
-func (db *DB) GetCommentsNbf(path string, limit int) ([]model.Comment, ThreadMetaInfo, error) {
+func (db *DB) GetCommentsNbf(path string, maxDepth int, limit int) ([]model.Comment, ThreadMetaInfo, error) {
 	rows, err := db.database.Query(
 		"SELECT `thread_id`, `num_total`, `num_root` FROM `thread` WHERE `path` = ?",
 		path,
@@ -239,8 +239,9 @@ func (db *DB) GetCommentsNbf(path string, limit int) ([]model.Comment, ThreadMet
 	}
 
 	rows, err = db.database.Query(
-		"SELECT "+commentSelectFields+" FROM `comment` WHERE `thread_id` = ? ORDER BY `touched_at` DESC, `created_at` ASC LIMIT ?",
+		"SELECT "+commentSelectFields+" FROM `comment` WHERE `thread_id` = ? AND `depth_level` < ? ORDER BY `touched_at` DESC, `created_at` ASC LIMIT ?",
 		threadId,
+		maxDepth,
 		limit,
 	)
 	if err != nil {

@@ -69,6 +69,3 @@ Gomment is currently WIP and not ready for production. Checklist for 1.0.0 relea
 
 *** TODO Loading animation to prevent multiple user requests
 
-*** TODO Bug: Small maximum depth causes fewer comments to show than requested
-
-*** TODO ~depth~ column in comment table to limit deph in queries (rather than in tree)

@@ -27,7 +27,7 @@ func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft i
 }
 
 func (logic *BusinessLogic) GetCommentsNbf(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
-	orderedComments, metadata, err := logic.DB.GetCommentsNbf(threadPath, maxCount)
+	orderedComments, metadata, err := logic.DB.GetCommentsNbf(threadPath, maxDepth, maxCount)
 	if err != nil {
 		return model.CommentsResponse{}, fmt.Errorf("unable to get comments from database: %w", err)
 	}

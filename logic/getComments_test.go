@@ -22,7 +22,7 @@ func (db *MockDb) CreateComment(commentCreation *model.CommentCreation, createdA
 	db.creations = append(db.creations, *commentCreation)
 	return 0, nil
 }
-func (db *MockDb) GetCommentsNbf(path string, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
+func (db *MockDb) GetCommentsNbf(path string, maxDepth int, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
 	numRoot := 0
 
 	for _, comment := range db.comments {

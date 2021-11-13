@@ -66,7 +66,7 @@ func TestNbfRootComment(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetCommentsNbf("/test-01", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/test-01", 100, 100)
 	require.NoError(t, err)
 
 	assert.Equal(t, 1, metainfo.NumTotal, "expected the thread to have 1 total comment")
@@ -127,7 +127,7 @@ func TestNbfEmptyThread(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetCommentsNbf("/foobar", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/foobar", 100, 100)
 	require.NoError(t, err, "expected no error even if the path does not exist yet")
 
 	assert.Equal(t, 0, metainfo.NumTotal, "expected the thread to have 0 total comments")
@@ -169,7 +169,7 @@ func TestNbfChildComment(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetCommentsNbf("/test-03", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/test-03", 100, 100)
 	require.NoError(t, err)
 
 	assert.Equal(t, 2, metainfo.NumTotal, "expected the thread to have 2 total comments")
@@ -236,7 +236,7 @@ func TestNbfTwoChildComments(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
-	comments, metainfo, err := db.GetCommentsNbf("/test-04", 100)
+	comments, metainfo, err := db.GetCommentsNbf("/test-04", 100, 100)
 	require.NoError(t, err)
 
 	assert.Equal(t, 3, metainfo.NumTotal, "expected the thread to have 3 total comments")
@@ -353,7 +353,7 @@ func TestNbfNewestLimit(t *testing.T) {
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
 
 	for i := range [4]int{} {
-		comments, metainfo, err := db.GetCommentsNbf("/test-07", i)
+		comments, metainfo, err := db.GetCommentsNbf("/test-07", 100, i)
 		assert.NoError(t, err)
 
 		assert.Equal(t, 2, metainfo.NumTotal, "expected the thread to have 2 total comments")
@@ -421,7 +421,7 @@ func TestNbfComplexTwoBranches(t *testing.T) {
 	orderedIds := []int64{rootComment2, leafComment2, rootComment1, leafComment1}
 
 	for i := range [6]int{} {
-		comments, metainfo, err := db.GetCommentsNbf("/test-08", i)
+		comments, metainfo, err := db.GetCommentsNbf("/test-08", 100, i)
 		require.NoError(t, err)
 
 		assert.Equal(t, 4, metainfo.NumTotal, "expected the thread to have 4 total comments")
