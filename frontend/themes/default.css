@@ -41,14 +41,19 @@
     padding: 5px 7px 5px 7px;
 }
 
+.gomment-new-error {
+    display: block;
+    padding: 8px 0px;
+    font-size: 0.9em;
+    color: #ff0c00;
+}
+
 .gomment-input-section > button {
-    margin-top: 5px;
     padding: 7px 15px 7px 15px;
     background-color: #00bbff;
     color: white;
     border: none;
     cursor: pointer;
-    margin-right: 10px;
 }
 
 .gomment-input-section > input:focus {

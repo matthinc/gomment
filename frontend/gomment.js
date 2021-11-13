@@ -41,6 +41,17 @@
  */
 
 /**
+ * A collection of all relevent DOM elements in the comment creation dialog.
+ * @typedef {Object} InputSectionDOM
+ * @property {HTMLElement} elRoot - .
+ * @property {HTMLInputElement} elMail - .
+ * @property {HTMLInputElement} elName - .
+ * @property {HTMLTextAreaElement} elContent - .
+ * @property {HTMLSpanElement} elError - .
+ * @property {HTMLButtonElement} elSubmit - .
+ */
+
+/**
  * Creates a new element and inserts it as the child of parent.
  * @param {string} type - Type of the new DOM element.
  * @param {string} className - Name of the class to assign to the newly created element.
@@ -123,15 +134,26 @@ export class Gomment {
       format_date: defaultDateTransformer
     };
 
+    // comment input section
+    /** @type {HTMLButtonElement | null} */
+    this.newCommentButton = null;
+
+    /** @type {InputSectionDOM | null} */
+    this.inputSectionDom = null;
+
+    /** @type {number} */
+    this.replyRecipient = 0;
+
+    /** @type {HTMLElement | null} */
+    this.replyIndicator = null;
+
     // stateful information
     /** @type {number | null} */
     this.threadId = null;
-    /** @type {HTMLElement | null} */
-    this.submitButton = null;
-    /** @type {HTMLElement | null} */
-    this.replyIndicator = null;
+
     /** @type {HTMLElement | null} */
     this.newButton = null;
+
     /** @type {CommentTreeNode} */
     this.rootNode = {
       comment: {
@@ -145,6 +167,7 @@ export class Gomment {
       children: [],
       dom: null,
     };
+
     /** @type {number} */
     this.numTotal = 0;
   }
@@ -277,7 +300,7 @@ export class Gomment {
       dom.elText.innerHTML = childNode.comment.text;
 
       dom.elReply.onclick = () => {
-        this.moveCommentTarget(dom.elChildren, childNode.comment.comment_id);
+        this.moveInputSection(dom.elChildren, childNode.comment.comment_id);
       };
 
       // attach child to the parent dom
@@ -323,10 +346,14 @@ export class Gomment {
    * @param {string} name
    * @param {string} email
    * @param {string} content - text content
-   * @returns {boolean} true if data was valid
+   * @returns {Promise<void>} true if data was valid
    */
   publishComment(parent, name, email, content) {
-    if (name && email && content) {
+    return new Promise((resolve, reject) => {
+      if (!name || !email || !content) {
+        return reject(this.i18n.alert_missing_information);
+      }
+
       const data = {
         author: name,
         email,
@@ -343,59 +370,124 @@ export class Gomment {
         .then(response => response.json())
         .then(data => {
           this.newComment = data.id;
+          return resolve();
+        })
+        .catch(err => {
+          return reject(err);
         });
-
-    } else {
-      alert(this.i18n.alert_missing_information);
-      return false;
-    }
-
-    return true;
+    });
   }
 
   /**
    * Move comment input to new parent and change recipient
-   * @param {HTMLElement} parent - new parent
+   * @param {HTMLElement} newParent - new parent
    * @param {number} recipient - new recipient (0 for top-level comments)
    */
-  moveCommentTarget(parent, recipient) {
-    // Set recipient
-    this.replyRecipient = recipient;
-
-    // Create new
-    if (!this.inputSection) {
-      const inputSection = insertElement('div', 'gomment-input-section', parent);
-      const mailElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-email', inputSection, { placeholder: this.i18n.placeholder_email }));
-      const nameElement = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-display-name', inputSection, { placeholder: this.i18n.placeholder_name }));
-      const contentElement = /** @type {HTMLInputElement} */ (insertElement('textarea', 'gomment-text-input', inputSection, { placeholder: this.i18n.placeholder_text }));
-
-      const publish = () => {
-        const recipient = this.replyRecipient || 0;
-        if (this.publishComment(recipient, nameElement.value, mailElement.value, contentElement.value)) {
-          // Clear inputs
-          mailElement.value = '';
-          nameElement.value = '';
-          contentElement.value = '';
-        }
-      };
-
-      insertElement('button', 'gomment-submit-button', inputSection, { innerHTML: this.i18n.submit, onclick: publish});
-
-      // Cache
-      this.inputSection = inputSection;
+  moveInputSection(newParent, recipient) {
+    if(this.inputSectionDom === null || this.newCommentButton === null) {
+      throw new Error('precondition failed: inputSectionDom and newCommentButton must be created before calling moveInputSection');
     }
 
-    // Move
-    if (parent.childNodes.length === 0) {
-      parent.appendChild(this.inputSection);
-    } else {
-      parent.insertBefore(this.inputSection, parent.childNodes[0]);
+    if (recipient < 0) {
+      throw new Error('reply recipient must be a valid comment_id');
     }
 
     // Hide new comment button
-    if (this.newCommentButton) {
-      this.newCommentButton.hidden = recipient === 0;
+    this.newCommentButton.hidden = recipient === 0;
+
+    // Set recipient
+    this.replyRecipient = recipient;
+
+    // Move
+    if (newParent.childNodes.length === 0) {
+      newParent.appendChild(this.inputSectionDom.elRoot);
+    } else {
+      newParent.insertBefore(this.inputSectionDom.elRoot, newParent.childNodes[0]);
     }
+  }
+
+  /**
+   * Hide the comment input section, but make the root level comment button visible.
+   * @returns {void}
+   */
+  hideInputSection() {
+    if(this.inputSectionDom === null || this.newCommentButton === null) {
+      throw new Error('precondition failed: inputSectionDom and newCommentButton must be created before calling moveInputSection');
+    }
+
+    // show the 'new comment' button
+    this.newCommentButton.hidden = false;
+
+    /** @type {HTMLElement | null} */
+    const currentParent = this.inputSectionDom.elRoot.parentElement;
+    currentParent && currentParent.removeChild(this.inputSectionDom.elRoot);
+  }
+
+  /**
+   * Create the comment input section DOM elements.
+   * @returns {InputSectionDOM}
+   */
+  createInputSection() {
+    const elRoot = insertElement('div', 'gomment-input-section', null);
+    const elMail = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-email', elRoot, { placeholder: this.i18n.placeholder_email }));
+    const elName = /** @type {HTMLInputElement} */ (insertElement('input', 'gomment-display-name', elRoot, { placeholder: this.i18n.placeholder_name }));
+    const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gomment-text-input', elRoot, { placeholder: this.i18n.placeholder_text }));
+    const elError = /** @type {HTMLInputElement} */ (insertElement('span', 'gomment-new-error', elRoot));
+    const elSubmit = /** @type {HTMLButtonElement} */ (insertElement('button', 'gomment-submit-button', elRoot, { innerHTML: this.i18n.submit}));
+
+    elSubmit.addEventListener('click', this.onSendComment.bind(this));
+
+    return {
+      elRoot,
+      elMail,
+      elName,
+      elContent,
+      elError,
+      elSubmit,
+    };
+  }
+
+  onSendComment() {
+    if(this.inputSectionDom === null) {
+      throw new Error('precondition failed: onSendComment requires inputSectionDom to be non-null');
+    }
+
+    /** @type {InputSectionDOM} */
+    const d = this.inputSectionDom;
+
+    // disable all input elements to give visual indication
+    const elements = [
+      d.elMail,
+      d.elName,
+      d.elContent,
+      d.elSubmit,
+    ];
+    elements.forEach(e => e.disabled = true);
+
+    this.publishComment(
+      this.replyRecipient,
+      d.elName.value,
+      d.elMail.value,
+      d.elContent.value,
+    )
+      .then(() => {
+        // Clear inputs
+        d.elName.value = '';
+        d.elMail.value = '';
+        d.elContent.value = '';
+        d.elError.innerText = '';
+
+        this.hideInputSection();
+
+        // enable all elements in the end
+        elements.forEach(e => e.disabled = false);
+      })
+      .catch(err => {
+        d.elError.innerText = err.toString();
+
+        // enable all elements in the end
+        elements.forEach(e => e.disabled = false);
+      });
   }
 
   /**
@@ -420,17 +512,21 @@ export class Gomment {
     // Create container element
     insertElement('div', 'gomment-title', container, { innerHTML: this.i18n.title });
 
-    // New comment button
-    const inputContainer = insertElement('div', 'gomment-new-comment-input-container', container);
+    // create container at the top of the comments for the input section
+    const topInputSectionContainer = insertElement('div', 'gomment-new-comment-input-container', container);
 
-    this.newCommentButton = insertElement('button', 'gomment-new-comment', inputContainer, { innerHTML: this.i18n.new_comment});
+    // create button for moving the comment section to the top level
+    const newButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gomment-new-comment', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
+    newButton.addEventListener('click', e => {
+      this.moveInputSection(topInputSectionContainer, 0);
+    })
+    this.newCommentButton = newButton
 
-    this.newCommentButton.onclick = () => {
-      this.moveCommentTarget(inputContainer, 0);
-    };
+    this.inputSectionDom = this.createInputSection();
+    topInputSectionContainer.appendChild(this.inputSectionDom.elRoot);
 
     // Initial input field position
-    this.moveCommentTarget(inputContainer, 0);
+    this.moveInputSection(topInputSectionContainer, 0);
 
     // Comments section
     this.rootNode.dom = this.createEmptyCommentDom(true);
