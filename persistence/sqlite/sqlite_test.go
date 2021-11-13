@@ -1,4 +1,4 @@
-package persistence_test
+package sqlite_test
 
 import (
 	"fmt"
@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/matthinc/gomment/model"
-	"github.com/matthinc/gomment/persistence"
+	"github.com/matthinc/gomment/persistence/sqlite"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,8 +21,8 @@ func min(a, b int) int {
 	return b
 }
 
-func createTestDatabase(testName string) (*persistence.DB, func(), error) {
-	db := persistence.New()
+func createTestDatabase(testName string) (*sqlite.DB, func(), error) {
+	db := sqlite.New()
 
 	dbFilename := "integration-test-" + testName + ".sqlite"
 	os.Remove(dbFilename)
@@ -37,7 +37,7 @@ func createTestDatabase(testName string) (*persistence.DB, func(), error) {
 	}, nil
 }
 
-func assertDepth(t *testing.T, db *persistence.DB, commentId int, depth int) {
+func assertDepth(t *testing.T, db *sqlite.DB, commentId int, depth int) {
 	commentRow, err := db.GetCommentRow(int64(commentId))
 	require.NoError(t, err)
 	assert.Equal(t, depth, commentRow.DepthLevel, fmt.Sprintf("expected comment id %d to have depth %d, was %d", commentId, depth, commentRow.DepthLevel))

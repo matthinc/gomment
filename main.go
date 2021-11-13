@@ -10,7 +10,7 @@ import (
 	"github.com/matthinc/gomment/api"
 	"github.com/matthinc/gomment/auth"
 	"github.com/matthinc/gomment/logic"
-	"github.com/matthinc/gomment/persistence"
+	"github.com/matthinc/gomment/persistence/sqlite"
 )
 
 func main() {
@@ -22,7 +22,7 @@ func main() {
 		}
 	}
 
-	db := persistence.DB{}
+	db := sqlite.DB{}
 
 	dbPath := os.Getenv("GOMMENT_DB_PATH")
 	if len(dbPath) == 0 {
