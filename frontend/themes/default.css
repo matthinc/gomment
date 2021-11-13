@@ -30,8 +30,10 @@
     padding-left: 8px;
 }
 
-.gmnt__comments > .gmnt-c__children {
+.gmnt__comments > .gmnt-c__children,
+.gmnt__comments > .gmnt-c__show-more-container {
     border: none;
+    padding-left: 0;
 }
 
 .gmnt__comments > .gmnt-c__children > .gmnt-c {
