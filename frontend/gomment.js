@@ -223,7 +223,7 @@ export class Gomment {
     // only load comments older than the newest comment. if no comment
     // is present take an arbitrary high number
     const newestCreatedAt = childComments.reduce((previous, current) => {
-      return Math.max(previous, current.comment.touched_at);
+      return Math.max(previous, Math.max(current.comment.created_at, current.comment.touched_at));
     }, 0) || 0x7FFFFFFFFFFFF;
 
     window
