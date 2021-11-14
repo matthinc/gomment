@@ -12,7 +12,7 @@
 
 * Retrieving Comments
 
-** "I want the newest 100 comments"
+** Newest Sibling First
 
 *** Straightforward Soulution
 - SQL query with =ORDER BY created_at LIMIT ...=
@@ -52,7 +52,44 @@ UPDATE `comment` AS c SET `num_children` = (SELECT COUNT(`comment_id`) FROM `com
 **** Loading more sibling comments
 - Client must specify all loaded siblings => =SELECT ... WHERE parent_id = bla AND comment_id NOT IN (...)=
 
-*** DONE Propagating child insert dates
+*** Recursive Select with limited depth and decreasing child count
+
+#+begin_example sql
+WITH RECURSIVE children(`comment_id`) AS (
+	SELECT c1.`comment_id` FROM `comment` c1 WHERE c1.`thread_id` = 1 AND c1.`parent_id` IS NULL
+	UNION
+	SELECT c1.`comment_id` FROM `comment` c1, children WHERE c1.`parent_id` = children.`comment_id` AND c1.`depth_level` < 3
+)
+SELECT c1.`comment_id`, c1.`text` FROM children, `comment` c1 WHERE c1.`comment_id` = children.`comment_id`
+#+end_example
+
+**** With two CTEs for initial limit clause
+#+begin_example sql
+WITH anchor AS(
+	SELECT c1.`comment_id` FROM `comment` c1 WHERE c1.`thread_id` = 1 AND c1.`parent_id` IS NULL ORDER BY c1.`created_at` DESC LIMIT 10
+), children(`comment_id`) AS (
+	SELECT anchor.`comment_id` FROM anchor
+	UNION
+	SELECT c1.`comment_id` FROM `comment` c1, children WHERE c1.`parent_id` = children.`comment_id` AND c1.`depth_level` < 3
+)
+SELECT c1.`comment_id`, c1.`text` FROM children, `comment` c1 WHERE c1.`comment_id` = children.`comment_id`
+#+end_example
+
+**** Fixed Depth Recursion
+- Example Limits: 10-4-2
+  - 10 + 10*4 + 10*4*2 = 130
+#+begin_example sql
+WITH anchor AS(
+	SELECT c1.`comment_id` FROM `comment` c1 WHERE c1.`thread_id` = 1 AND c1.`parent_id` IS NULL ORDER BY c1.`created_at` DESC LIMIT 10
+), lvl1 AS (
+	SELECT c1.`comment_id` FROM `comment` c1, anchor WHERE c1.`parent_id` = anchor.`comment_id` ORDER BY c1.`created_at` DESC LIMIT 4
+), lvl2 AS (
+	SELECT c1.`comment_id` FROM `comment` c1, lvl1 WHERE c1.`parent_id` = lvl1.`comment_id` ORDER BY c1.`created_at` DESC LIMIT 2
+)
+SELECT * FROM `comment` WHERE `comment_id` IN (SELECT * FROM anchor UNION SELECT * FROM lvl1 UNION SELECT * FROM lvl2)
+#+end_example
+
+** Newest Branch First
 - Get all ids of branch
   #+begin_example sql
 WITH RECURSIVE `parents`(`parent_id`) AS (SELECT 17 UNION SELECT `comment`.`parent_id` FROM `comment`,`parents` where `comment_id` = `parents`.`parent_id`)
@@ -73,11 +110,11 @@ UPDATE `comment` SET `touched_at` = c1.`created_at` FROM (SELECT `created_at` FR
     - Impossible Corner case: Parent and child have the same date
   - Test: No comment without parent
 
-**** Loading more sibling comments
+*** Loading more sibling comments
 - Sibling comments can be older or younger (since ordered by =touched_at=)
 - => Load all comments that are older (~created_at~) than the newest loaded comment, then filter out the eixisting ones
 
-***** Using a =NOT IN= selection
+**** Using a =NOT IN= selection
 - Problem: Sqlite does not allow binding arrays by default
 - =carray= extension could be used, but is not available in go: https://sqlite.org/carray.html, https://github.com/mattn/go-sqlite3/pull/347#issuecomment-259771669
 #+begin_example
@@ -89,20 +126,20 @@ SELECT * FROM `comment` WHERE
 ORDER BY `created_at` LIMIT 10
 #+end_example
 
-***** Filtering on client side
+**** Filtering on client side
 - Problem: What value to pick for the limit argument?
   - Best estimate: ~batch size + comments to exclude~
 - Assumption: Ordering by ~created_at~ implies reverse ordering by ~comment_id~
 
-**** Are there more root comments?
+*** Are there more root comments?
 - Root comments do not have a common parent => no ~num_children~ available when querying
 
-***** Artificial "Trunk" Comment without data
+**** Artificial "Trunk" Comment without data
 - No real comment (no content), could confuse other algorithms
 - Comment hierarchy depth is increase by 1
 - What ID to use? ~parent_id = 0~ is already used for root comments
 
-***** Extra attributes in =thread= table
+**** Extra attributes in =thread= table
 - Thread table must be queryied for every initial comment request (not expensive, cacheable)
 - Possibility to store more thread-specific meta information
 - Extra attributes: ~num_total~, ~num_root~
