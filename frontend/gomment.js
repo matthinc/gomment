@@ -119,6 +119,7 @@ export class Gomment {
     // i18n
     this.i18n = options.i18n || {
       title: 'Comments',
+      title_total: 'Total',
       empty: 'No comments',
       placeholder_name: 'Name',
       placeholder_email: 'E-Mail',
@@ -148,6 +149,9 @@ export class Gomment {
       children: [],
       dom: null,
     };
+
+    /** @type {HTMLElement | null} */
+    this.elTitle = null;
 
     // comment input section
     /** @type {HTMLButtonElement | null} */
@@ -182,7 +186,9 @@ export class Gomment {
     this.numTotal = queryResponse.num_total;
     this.rootNode.comment.num_children = queryResponse.num_root;
     this.threadId = queryResponse.thread_id;
-    console.warn("TODO: update DOM in setTotalComments");
+    if(this.elTitle !== null) {
+      this.elTitle.innerText = `${this.i18n.title} (${this.numTotal} ${this.i18n.title_total})`;
+    }
   }
 
   /**
@@ -571,7 +577,7 @@ export class Gomment {
     }
 
     // Create container element
-    insertElement('div', 'gmnt__title', container, { innerHTML: this.i18n.title });
+    this.elTitle = insertElement('div', 'gmnt__title', container, { innerHTML: this.i18n.title });
 
     // create container at the top of the comments for the input section
     const topInputSectionContainer = insertElement('div', 'gmnt__input-section-container', container);
