@@ -26,6 +26,19 @@
     cursor: pointer;
 }
 
+.gmnt__order-container {
+    padding-left: 8px;
+    padding-top: 16px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.gmnt__order-select {
+    background: none;
+    border: none;
+    color: #0bf;
+}
+
 .gmnt__comments {
     padding-left: 8px;
 }

@@ -115,6 +115,13 @@ export class Gomment {
     this.batchSize = options.batchSize || 10;
     /** @type {number} */
     this.maxDepth = options.maxDepth || 6;
+    /** @type {'nbf' | 'nsf' | 'osf'} */
+    this.sortingOrder = options.sortingOrder || 'nbf';
+
+    const sortingOptions = ['nbf', 'nsf', 'osf'];
+    if(sortingOptions.indexOf(this.sortingOrder) < 0) {
+      throw new Error(`option 'sortingOrder' must be one of: ${sortingOptions}`);
+    }
 
     // i18n
     this.i18n = options.i18n || {
@@ -193,27 +200,23 @@ export class Gomment {
 
   /**
    * Query for comments with the specified parameters and render them.
-   * @param {number} max - Maximum amount of comments to query.
-   * @param {number} depth - Maximum level of depth to query.
+   * @param {boolean} reload - Whether to remove all existing comments before loading.
    * @returns {void}
    */
-  loadComments(max, depth) {
-    window.fetch(`${this.apiURL}comments/nbf?threadPath=${encodeURIComponent(this.threadPath)}&max=${max}&depth=${depth}`)
+  loadComments(reload) {
+    window.fetch(`${this.apiURL}comments/${this.sortingOrder}?threadPath=${encodeURIComponent(this.threadPath)}&max=${this.batchSize}&depth=${this.maxDepth}`)
       .then(rawData => rawData.json())
       .then(/** @type {function(CommentQueryResponse): void} */ jsonData => {
+        const rootDom = this.rootNode.dom;
+        while (reload && rootDom && rootDom.elChildren.firstChild) {
+          rootDom.elChildren.removeChild(rootDom.elChildren.firstChild);
+        }
+
         this.setThreadMetadata(jsonData);
         this.rootNode.children = jsonData.comments;
 
         this.renderComment(this.rootNode);
       });
-  }
-
-  /**
-   * Load comments with the initial default parameters.
-   * @returns {void}
-   */
-  loadCommentsInitial() {
-    this.loadComments(this.batchSize, this.maxDepth);
   }
 
   /**
@@ -233,7 +236,7 @@ export class Gomment {
     }, 0) || 0x7FFFFFFFFFFFF;
 
     window
-      .fetch(`${this.apiURL}morecomments/nbf?threadId=${this.threadId}&parentId=${parent.comment.comment_id}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
+      .fetch(`${this.apiURL}morecomments/${this.sortingOrder}?threadId=${this.threadId}&parentId=${parent.comment.comment_id}&newestCreatedAt=${newestCreatedAt}&limit=${this.batchSize}&excludeIds=${excludeIds}`)
       .then(rawData => rawData.json())
       .then(/** @type {function(Array<CommentModel>): void} */ comments => {
         comments.forEach(c => {
@@ -582,6 +585,14 @@ export class Gomment {
     // create container at the top of the comments for the input section
     const topInputSectionContainer = insertElement('div', 'gmnt__input-section-container', container);
 
+    const orderContainer = insertElement('div', 'gmnt__order-container', container, {innerHTML: `<span>Sorting </span><select class="gmnt__order-select"><option value="nbf">Newest Branch First</option><option value="nsf">Newest Sibling First</option><option value="osf">Oldest Sibling First</option></select>`});
+    const selectElement = /** @type {HTMLSelectElement} */ (orderContainer.querySelector('select'));
+    selectElement.value = this.sortingOrder;
+    selectElement.addEventListener('change', e => {
+      this.sortingOrder = /** @type {'nbf' | 'nsf' | 'osf'} */ (selectElement.value);
+      this.loadComments(true);
+    });
+
     // create button for moving the comment section to the top level
     const newButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt__new-comment-btn', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
     newButton.addEventListener('click', e => {
@@ -600,7 +611,7 @@ export class Gomment {
     container.appendChild(this.rootNode.dom.elRoot);
 
     // Load and render comments
-    this.loadCommentsInitial();
+    this.loadComments(false);
   }
 
   /**
