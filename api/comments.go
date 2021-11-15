@@ -11,6 +11,14 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type orderType int
+
+const (
+	orderNbf orderType = iota
+	orderNsf orderType = iota
+	orderOsf orderType = iota
+)
+
 func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 	var commentCreation model.CommentCreation
 	err := c.BindJSON(&commentCreation)
@@ -40,6 +48,18 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 }
 
 func routeGetCommentsNbf(c *gin.Context, logic *logic.BusinessLogic) {
+	routeGetComments(orderNbf, c, logic)
+}
+
+func routeGetCommentsNsf(c *gin.Context, logic *logic.BusinessLogic) {
+	routeGetComments(orderNsf, c, logic)
+}
+
+func routeGetCommentsOsf(c *gin.Context, logic *logic.BusinessLogic) {
+	routeGetComments(orderOsf, c, logic)
+}
+
+func routeGetComments(order orderType, c *gin.Context, logic *logic.BusinessLogic) {
 	// Required thread parameter
 	threadPath, err := getStringQueryParameter(c, "threadPath")
 	if err != nil {
@@ -57,7 +77,15 @@ func routeGetCommentsNbf(c *gin.Context, logic *logic.BusinessLogic) {
 	parent := getIntQueryParameter(c, "parent", 0)
 
 	// Query comments tree
-	comments, err := logic.GetCommentsNbf(threadPath, parent, depth, max)
+	var comments model.CommentsResponse
+	switch order {
+	case orderNbf:
+		comments, err = logic.GetCommentsNbf(threadPath, parent, depth, max)
+	case orderNsf:
+		comments, err = logic.GetCommentsNsf(threadPath, parent, depth, max)
+	case orderOsf:
+		comments, err = logic.GetCommentsOsf(threadPath, parent, depth, max)
+	}
 	if err != nil {
 		log.Error("routeGetComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -78,6 +106,18 @@ func routeGetCommentsNbf(c *gin.Context, logic *logic.BusinessLogic) {
 }
 
 func routeGetMoreCommentsNbf(c *gin.Context, logic *logic.BusinessLogic) {
+	routeGetMoreComments(orderNbf, c, logic)
+}
+
+func routeGetMoreCommentsNsf(c *gin.Context, logic *logic.BusinessLogic) {
+	routeGetMoreComments(orderNsf, c, logic)
+}
+
+func routeGetMoreCommentsOsf(c *gin.Context, logic *logic.BusinessLogic) {
+	routeGetMoreComments(orderOsf, c, logic)
+}
+
+func routeGetMoreComments(order orderType, c *gin.Context, logic *logic.BusinessLogic) {
 	// Optional query parameters
 	threadId := getInt64QueryParameter(c, "threadId", 0)
 	parentId := getInt64QueryParameter(c, "parentId", 0)
@@ -86,7 +126,16 @@ func routeGetMoreCommentsNbf(c *gin.Context, logic *logic.BusinessLogic) {
 	limit := getIntQueryParameter(c, "limit", 0)
 
 	// Query comments tree
-	comments, err := logic.GetMoreCommentsNbf(threadId, parentId, newestCreatedAt, excludeIds, limit)
+	var comments []model.Comment
+	var err error
+	switch order {
+	case orderNbf:
+		comments, err = logic.GetMoreCommentsNbf(threadId, parentId, newestCreatedAt, excludeIds, limit)
+	case orderNsf:
+		comments, err = logic.GetMoreCommentsNsf(threadId, parentId, newestCreatedAt, excludeIds, limit)
+	case orderOsf:
+		comments, err = logic.GetMoreCommentsOsf(threadId, parentId, newestCreatedAt, excludeIds, limit)
+	}
 	if err != nil {
 		log.Error("routeGetComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{

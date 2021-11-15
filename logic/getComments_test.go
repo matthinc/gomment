@@ -39,6 +39,18 @@ func (db *MockDb) GetCommentsNbf(path string, maxDepth int, limit int) ([]model.
 func (db *MockDb) GetMoreCommentsNbf(threadId int64, parentId int64, newestCreatedAt int64, excludeIds []int64, limit int) ([]model.Comment, error) {
 	return db.comments, nil
 }
+func (db *MockDb) GetCommentsNsf(path string, maxDepth int, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
+	return db.GetCommentsNbf(path, maxDepth, limit)
+}
+func (db *MockDb) GetMoreCommentsNsf(threadId int64, parentId int64, newestCreatedAt int64, limit int) ([]model.Comment, error) {
+	return db.comments, nil
+}
+func (db *MockDb) GetCommentsOsf(path string, maxDepth int, limit int) ([]model.Comment, persistence.ThreadMetaInfo, error) {
+	return db.GetCommentsNbf(path, maxDepth, limit)
+}
+func (db *MockDb) GetMoreCommentsOsf(threadId int64, parentId int64, newestCreatedAt int64, limit int) ([]model.Comment, error) {
+	return db.comments, nil
+}
 func (db *MockDb) GetThreads() ([]model.Thread, error) { return []model.Thread{}, nil }
 
 func TestSimple(t *testing.T) {

@@ -140,6 +140,12 @@ func StartApi(logic *logic.BusinessLogic) {
 	// newest branch first
 	v1.GET("/comments/nbf", injectLogic(routeGetCommentsNbf, logic))
 	v1.GET("/morecomments/nbf", injectLogic(routeGetMoreCommentsNbf, logic))
+	// newest sibling first
+	v1.GET("/comments/nsf", injectLogic(routeGetCommentsNsf, logic))
+	v1.GET("/morecomments/nsf", injectLogic(routeGetMoreCommentsNsf, logic))
+	// oldest sibling first
+	v1.GET("/comments/osf", injectLogic(routeGetCommentsOsf, logic))
+	v1.GET("/morecomments/osf", injectLogic(routeGetMoreCommentsOsf, logic))
 
 	if len(logic.PwHash) > 0 {
 		// enable admin API routes
