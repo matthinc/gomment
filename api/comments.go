@@ -7,8 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/matthinc/gomment/logic"
 	"github.com/matthinc/gomment/model"
-
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 type orderType int
@@ -23,7 +22,7 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 	var commentCreation model.CommentCreation
 	err := c.BindJSON(&commentCreation)
 	if err != nil {
-		log.Info("routePostComment", err)
+		zap.L().Sugar().Infow("routePostComment", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 		})
@@ -36,7 +35,7 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 
 	result.Id, err = logic.CreateComment(&commentCreation)
 	if err != nil {
-		log.Error("routePostComment", err)
+		zap.L().Sugar().Errorw("routePostComment", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})
@@ -63,7 +62,7 @@ func routeGetComments(order orderType, c *gin.Context, logic *logic.BusinessLogi
 	// Required thread parameter
 	threadPath, err := getStringQueryParameter(c, "threadPath")
 	if err != nil {
-		log.Info("routeGetComments", err)
+		zap.L().Sugar().Infow("routeGetComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})
@@ -87,7 +86,7 @@ func routeGetComments(order orderType, c *gin.Context, logic *logic.BusinessLogi
 		comments, err = logic.GetCommentsOsf(threadPath, parent, depth, max)
 	}
 	if err != nil {
-		log.Error("routeGetComments", err)
+		zap.L().Sugar().Errorw("routeGetComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})
@@ -137,7 +136,7 @@ func routeGetMoreComments(order orderType, c *gin.Context, logic *logic.Business
 		comments, err = logic.GetMoreCommentsOsf(threadId, parentId, newestCreatedAt, excludeIds, limit)
 	}
 	if err != nil {
-		log.Error("routeGetComments", err)
+		zap.L().Sugar().Errorw("routeGetMoreComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})

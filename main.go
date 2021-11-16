@@ -2,9 +2,12 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"syscall"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"golang.org/x/crypto/ssh/terminal"
 
 	"github.com/matthinc/gomment/api"
@@ -14,6 +17,12 @@ import (
 )
 
 func main() {
+	loggerConfig := zap.NewDevelopmentConfig()
+	loggerConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	logger, _ := loggerConfig.Build()
+    undo := zap.ReplaceGlobals(logger)
+	defer undo()
+
 	if len(os.Args) > 1 {
 		command := os.Args[1]
 		switch command {
@@ -36,10 +45,12 @@ func main() {
 
 	err := db.Open(dbPath)
 	if err != nil {
+		log.Fatal(err)
 		os.Exit(2)
 	}
 	err = db.Setup()
 	if err != nil {
+		log.Fatal(err)
 		os.Exit(3)
 	}
 
