@@ -82,3 +82,5 @@ Checklist for 1.0.0 release:
 *** TODO Clean up nbf tests
 
 *** TODO XSF: morecomments only with newestcreatedat
+
+*** TODO Integration Tests for migrations

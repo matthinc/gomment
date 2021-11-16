@@ -20,7 +20,7 @@ func main() {
 	loggerConfig := zap.NewDevelopmentConfig()
 	loggerConfig.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
 	logger, _ := loggerConfig.Build()
-    undo := zap.ReplaceGlobals(logger)
+	undo := zap.ReplaceGlobals(logger)
 	defer undo()
 
 	if len(os.Args) > 1 {
