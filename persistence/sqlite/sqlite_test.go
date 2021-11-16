@@ -37,7 +37,7 @@ func createTestDatabase(testName string) (*sqlite.DB, func(), error) {
 	}, nil
 }
 
-func assertDepth(t *testing.T, db *sqlite.DB, commentId int, depth int) {
+func assertDepth(t *testing.T, db *sqlite.DB, commentId int64, depth int) {
 	commentRow, err := db.GetCommentRow(int64(commentId))
 	require.NoError(t, err)
 	assert.Equal(t, depth, commentRow.DepthLevel, fmt.Sprintf("expected comment id %d to have depth %d, was %d", commentId, depth, commentRow.DepthLevel))
@@ -221,7 +221,7 @@ func TestNbfTwoChildComments(t *testing.T) {
 		Email:      "alfred@peterson.se",
 		Text:       "I disagree!",
 		ThreadPath: "/test-04",
-		ParentId:   int(commentId),
+		ParentId:   commentId,
 	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
@@ -231,7 +231,7 @@ func TestNbfTwoChildComments(t *testing.T) {
 		Email:      "child@childison.dk",
 		Text:       "I am the child.",
 		ThreadPath: "/test-04",
-		ParentId:   int(commentId),
+		ParentId:   commentId,
 	}, 3)
 	require.NoError(t, err)
 	assert.NotZero(t, commentId, "expected comment id to be not zero")
@@ -402,7 +402,7 @@ func TestNbfComplexTwoBranches(t *testing.T) {
 		Email:      "child@mueller.de",
 		Text:       "This is a great child.",
 		ThreadPath: "/test-08",
-		ParentId:   int(rootComment1),
+		ParentId:   rootComment1,
 	}, 3)
 	require.NoError(t, err)
 	assert.NotZero(t, leafComment1, "expected comment id to be not zero")
@@ -412,7 +412,7 @@ func TestNbfComplexTwoBranches(t *testing.T) {
 		Email:      "child@peterson.se",
 		Text:       "No, dad!",
 		ThreadPath: "/test-08",
-		ParentId:   int(rootComment2),
+		ParentId:   rootComment2,
 	}, 4)
 	require.NoError(t, err)
 	assert.NotZero(t, leafComment2, "expected comment id to be not zero")
@@ -466,7 +466,7 @@ func TestNbfMoreSiblingsSimple(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(comments), "expected one sibling comment to be returned")
 
-	assert.Equal(t, 1, comments[0].Id, "expected loaded sibling to have id 1")
+	assert.Equal(t, int64(1), comments[0].Id, "expected loaded sibling to have id 1")
 }
 
 func TestNbfMoreSiblingsUnordered(t *testing.T) {
@@ -525,8 +525,8 @@ func TestNbfMoreSiblingsExcludeMiddle(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 2, len(comments), "expected two sibling comments to be returned")
 
-	assert.Equal(t, 3, comments[0].Id, "expected first loaded sibling to have id 3")
-	assert.Equal(t, 1, comments[1].Id, "expected first loaded sibling to have id 1")
+	assert.Equal(t, int64(3), comments[0].Id, "expected first loaded sibling to have id 3")
+	assert.Equal(t, int64(1), comments[1].Id, "expected first loaded sibling to have id 1")
 }
 
 func TestNbfMoreSiblingsIgnoreYounger(t *testing.T) {
@@ -567,5 +567,5 @@ func TestNbfMoreSiblingsIgnoreYounger(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(comments), "expected one sibling comment to be returned")
 
-	assert.Equal(t, 1, comments[0].Id, "expected loaded sibling to have id 1")
+	assert.Equal(t, int64(1), comments[0].Id, "expected loaded sibling to have id 1")
 }

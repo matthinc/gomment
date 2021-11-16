@@ -1,9 +1,11 @@
 package logic
 
 import (
-	"github.com/matthinc/gomment/model"
+	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/matthinc/gomment/model"
 )
 
 var previewColors = [...]string{
@@ -21,7 +23,7 @@ func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth 
 	sb.WriteString(`">`)
 	// <id>
 	sb.WriteString(`<div style="font-style:italic">ID:&nbsp;`)
-	sb.WriteString(strconv.Itoa(comment.Id))
+	sb.WriteString(fmt.Sprint(comment.Id))
 	sb.WriteString(`</div>`)
 	// </id>
 	// <author>

@@ -15,7 +15,7 @@ func (db *DB) GetThreads() ([]model.Thread, error) {
 
 	response := make([]model.Thread, 0)
 
-	var id int
+	var id int64
 	var path string
 	for rows.Next() {
 		if err := rows.Scan(&id, &path); err != nil {

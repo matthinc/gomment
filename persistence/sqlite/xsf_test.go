@@ -141,7 +141,7 @@ func TestXsfParentChild(t *testing.T) {
 
 	childComment1, err := db.CreateComment(&model.CommentCreation{
 		ThreadPath: "/",
-		ParentId:   int(rootComment1),
+		ParentId:   rootComment1,
 	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, childComment1, "expected comment id to be not zero")
@@ -229,14 +229,14 @@ func TestXsfDepth(t *testing.T) {
 
 	childComment1, err := db.CreateComment(&model.CommentCreation{
 		ThreadPath: "/",
-		ParentId:   int(rootComment1),
+		ParentId:   rootComment1,
 	}, 2)
 	require.NoError(t, err)
 	assert.NotZero(t, childComment1, "expected comment id to be not zero")
 
 	childComment2, err := db.CreateComment(&model.CommentCreation{
 		ThreadPath: "/",
-		ParentId:   int(childComment1),
+		ParentId:   childComment1,
 	}, 3)
 	require.NoError(t, err)
 	assert.NotZero(t, childComment2, "expected comment id to be not zero")

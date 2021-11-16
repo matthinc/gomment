@@ -15,7 +15,7 @@ const (
 	orderOsf orderType = iota
 )
 
-func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft int) []model.CommentTree {
+func constructTreeDepthFirst(comments []model.Comment, parentId int64, depthLeft int) []model.CommentTree {
 	subtrees := make([]model.CommentTree, 0)
 
 	for _, comment := range comments {
@@ -35,7 +35,7 @@ func constructTreeDepthFirst(comments []model.Comment, parentId int, depthLeft i
 	return subtrees
 }
 
-func (logic *BusinessLogic) getComments(order orderType, threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) getComments(order orderType, threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
 	var (
 		orderedComments []model.Comment
 		metadata        persistence.ThreadMetaInfo
@@ -65,15 +65,15 @@ func (logic *BusinessLogic) getComments(order orderType, threadPath string, pare
 	}, nil
 }
 
-func (logic *BusinessLogic) GetCommentsNbf(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) GetCommentsNbf(threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
 	return logic.getComments(orderNbf, threadPath, parentId, maxDepth, maxCount)
 }
 
-func (logic *BusinessLogic) GetCommentsNsf(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) GetCommentsNsf(threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
 	return logic.getComments(orderNsf, threadPath, parentId, maxDepth, maxCount)
 }
 
-func (logic *BusinessLogic) GetCommentsOsf(threadPath string, parentId int, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) GetCommentsOsf(threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
 	return logic.getComments(orderOsf, threadPath, parentId, maxDepth, maxCount)
 }
 

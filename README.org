@@ -51,7 +51,8 @@ Checklist for 1.0.0 release:
 - [X] Newest Sibling First (NSF) sorting
 - [ ] Comment administration panel
 - [ ] Working system tests (API)
-- [ ] Database migration system
+- [X] Database migration system
+- [ ] Database migration tests
 - [ ] Detailed installation documentation (nginx, ...)
 - [ ] Deployed Live-Demo
 - [ ] Integrate static assets in go binary
@@ -68,8 +69,6 @@ Checklist for 1.0.0 release:
 *** TODO Restrict GOMMENT_SID cookie path to X-Forward-Prefix
 
 *** TODO Show error when loading comments fails
-
-*** TODO Make all IDs int64
 
 *** TODO Input validation non-empty text
 

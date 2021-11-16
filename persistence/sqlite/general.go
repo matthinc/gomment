@@ -62,7 +62,7 @@ func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
 	response := make([]model.Comment, 0)
 
 	var (
-		id          int
+		id          int64
 		parent      sql.NullInt64
 		createdAt   int64
 		touchedAt   int64
@@ -77,9 +77,9 @@ func (db *DB) parseCommentsQuery(rows *sql.Rows) ([]model.Comment, error) {
 			return nil, fmt.Errorf("failed to scan result row: %w", err)
 		}
 
-		parentId := 0
+		parentId := int64(0)
 		if parent.Valid {
-			parentId = int(parent.Int64)
+			parentId = parent.Int64
 		}
 
 		comment := model.Comment{

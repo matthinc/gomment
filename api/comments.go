@@ -73,7 +73,7 @@ func routeGetComments(order orderType, c *gin.Context, logic *logic.BusinessLogi
 	depth := getIntQueryParameter(c, "depth", 0)
 	max := getIntQueryParameter(c, "max", 0)
 	preview := getIntQueryParameter(c, "preview", 0)
-	parent := getIntQueryParameter(c, "parent", 0)
+	parent := getInt64QueryParameter(c, "parent", 0)
 
 	// Query comments tree
 	var comments model.CommentsResponse
