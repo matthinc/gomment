@@ -142,7 +142,6 @@ export class Gomment {
       placeholder_email: 'E-Mail',
       placeholder_text: 'Your comment',
       submit: 'Submit',
-      submit_reply: 'Reply',
       show_more: 'Load more comments',
       show_more_depth: 'Load more replies',
       alert_missing_information: 'Please fill out all required fields!',
@@ -151,6 +150,10 @@ export class Gomment {
       network_error: 'A network error occured',
       loading_progress: 'The comments are being loaded...',
       loading_error: 'An error occurred while loading comments.',
+      sorting: 'Sorting',
+      newest_branch_first: 'Newest Branch First',
+      newest_sibling_first: 'Newest Sibling First',
+      oldest_sibling_first: 'Oldest Sibling First',
       /** @type {(date: Date) => string} */
       format_date: defaultDateTransformer
     };
@@ -608,7 +611,7 @@ export class Gomment {
     // create container at the top of the comments for the input section
     const topInputSectionContainer = insertElement('div', 'gmnt__input-section-container', container);
 
-    const orderContainer = insertElement('div', 'gmnt__order-container', container, {innerHTML: `<span>Sorting </span><select class="gmnt__order-select"><option value="nbf">Newest Branch First</option><option value="nsf">Newest Sibling First</option><option value="osf">Oldest Sibling First</option></select>`});
+    const orderContainer = insertElement('div', 'gmnt__order-container', container, {innerHTML: `<span>${this.i18n.sorting} </span><select class="gmnt__order-select"><option value="nbf">${this.i18n.newest_branch_first}</option><option value="nsf">${this.i18n.newest_sibling_first}</option><option value="osf">${this.i18n.oldest_sibling_first}</option></select>`});
     const selectElement = /** @type {HTMLSelectElement} */ (orderContainer.querySelector('select'));
     selectElement.value = this.sortingOrder;
     selectElement.addEventListener('change', e => {

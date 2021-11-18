@@ -8,7 +8,7 @@
 ** Why gomment?
 - *Lighweight* - The docker image is < 30MB, the JavaScript file is < 20kB (gzip < 5kB)
 - *Minimal Dependencies* - Dependency-less frontend, minimal backend dependencies
-- *Fast* - Native performance thanks to go, serves 1000000 comments in under 150ms (why would you do that tho)
+- *Fast* - Native performance thanks to go, serves 1000 comments in < 1ms and 1000000 comments in under 150ms (why would you do that tho)
 - *Frontend-agnostic* - Use the default JavaScript frontend or build your own using the *gomment JSON API*
 - *Container-first* - gomment was built with *Docker* in mind from the first second
 - *Portable* - gomment uses a single SQLite file as its database and a single binary as server
