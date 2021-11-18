@@ -1,5 +1,5 @@
 #+startup: indent
-* gomment - A lightweight commenting system using Go, SQLite and Vanilla JS
+* gomment - A threaded, lightweight and selfhosted commenting system using Go, SQLite and Vanilla JS
 [[https://api.travis-ci.com/matthinc/gomment.svg?branch=master]]
 [[https://img.shields.io/docker/image-size/matthinc/gomment.svg]]
 
@@ -7,10 +7,23 @@
 
 ** Why gomment?
 - *Lighweight* - The docker image is < 30MB, the JavaScript file is < 20kB (gzip < 5kB)
-- *Fast* - Native performance thanks to go
+- *Minimal Dependencies* - Dependency-less frontend, minimal backend dependencies
+- *Fast* - Native performance thanks to go, serves 1000000 comments in under 150ms (why would you do that tho)
 - *Frontend-agnostic* - Use the default JavaScript frontend or build your own using the *gomment JSON API*
 - *Container-first* - gomment was built with *Docker* in mind from the first second
-- *Portable* - gomment uses a single SQLite file as its database
+- *Portable* - gomment uses a single SQLite file as its database and a single binary as server
+
+*** Seriously, another commenting system?
+Yes, here is how gomment compares to other [[https://lisakov.com/projects/open-source-comments/][popular systems]] (totally objective):
+- [[https://github.com/posativ/isso][isso]]: I dislike python in production/deployment (challenge: try to deploy it from source)
+- [[https://github.com/adtac/commento][commento]]: Has a Postgres database
+- [[https://remark42.com/][remark42]]: gomment has no voting, no Markdown, no sign-ins, anonymous access only
+  - Looks cool, you should probably use this if you need more features
+- [[https://github.com/vkuznecovas/mouthful][mouthful]]: Looks pretty similar, haven't tried
+- [[https://github.com/eduardoboucas/staticman][staticman]]: Too static :)
+- [[https://github.com/xCss/Valine][Valine]]: Is not completely selfhosted
+- [[https://github.com/schn4ck/schnack][schnack]]: No anonymous comments (?)
+- [[https://github.com/djyde/cusdis][cusdis]]: Looks pretty similar, haven't tried
 
 ** Contributing
 All contributions to the project are welcome. Make sure to read the project philosophy before submitting your contribution.
@@ -21,6 +34,7 @@ All contributions to the project are welcome. Make sure to read the project phil
 - JavaScript: Keep it vanilla - No JavaScript build pipeline, just static analyzers
 - The 3rd NF can be violated - Traversing trees in DBMS is expensive, keep it fast
 - System Tests > Integration Tests > Unit Tests - Unit-test the hard things
+- Don't try to solve everyone's problem - Stick to the core functionality
 
 *** Conventions and Standards
 - CSS identifier naming: [[http://getbem.com/naming/][BEM]]
@@ -61,6 +75,8 @@ Checklist for 1.0.0 release:
 *** Version 1.1.0 Milestone
 - [ ] Static non-JS Preview
 - [ ] Pluggable system for notification
+- [ ] Rate Limiting
+- [ ] Proof of Work (SHA-512 Challenge)
 
 ** Misc TODOs
 *** TODO Set trusted cookies in config file
@@ -73,8 +89,6 @@ Checklist for 1.0.0 release:
 *** TODO Input validation non-empty text
 
 *** TODO Loading animation to prevent multiple user requests
-
-*** TODO use proper go / gingnic contexts
 
 *** TODO Configurable server-side limits depth/limit
 
