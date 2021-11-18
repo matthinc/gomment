@@ -39,6 +39,13 @@
     color: #0bf;
 }
 
+.gmnt__loading-info {
+    color: gray;
+    text-align: center;
+    padding: 16px 0;
+    font-size: 0.9em;
+}
+
 .gmnt__comments {
     padding-left: 8px;
 }

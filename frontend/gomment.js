@@ -14,7 +14,7 @@
  * @typedef {Object} CommentTreeNode
  * @property {CommentModel} comment - The actual comment data (content).
  * @property {Array<CommentTreeNode>} children - Children comments of this comment.
- * @property {CommentDom | null} dom - The DOM node the comment was rendered into, null otherwise.
+ * @property {CommentDOM | null} dom - The DOM node the comment was rendered into, null otherwise.
  */
 
 /**
@@ -29,7 +29,7 @@
 
 /**
  * An element representing a DOM node for a comment, containing references to the most important elements.
- * @typedef {Object} CommentDom
+ * @typedef {Object} CommentDOM
  * @property {HTMLElement} elRoot - .
  * @property {HTMLElement | null} elAuthor - .
  * @property {HTMLElement | null} elDate - .
@@ -49,6 +49,16 @@
  * @property {HTMLTextAreaElement} elContent - .
  * @property {HTMLSpanElement} elError - .
  * @property {HTMLButtonElement} elSubmit - .
+ */
+
+/**
+ * A collection of DOM elements available after injecting.
+ * @typedef {Object} GommentDOM
+ * @property {HTMLElement} elTitle - The title of the comment section.
+ * @property {HTMLElement} elLoadingInfo - The current loading status/error.
+ * @property {HTMLButtonElement} elNewCommentButton - A button for creating a new comment.
+ * @property {InputSectionDOM} inputSectionDom - A collection of elements for the input section.
+ * @property {CommentDOM} rootCommentDom - A collection of elements for the root comment.
  */
 
 /**
@@ -139,6 +149,8 @@ export class Gomment {
       reply: 'Reply',
       new_comment: 'Write comment',
       network_error: 'A network error occured',
+      loading_progress: 'The comments are being loaded...',
+      loading_error: 'An error occurred while loading comments.',
       /** @type {(date: Date) => string} */
       format_date: defaultDateTransformer
     };
@@ -157,15 +169,8 @@ export class Gomment {
       dom: null,
     };
 
-    /** @type {HTMLElement | null} */
-    this.elTitle = null;
-
-    // comment input section
-    /** @type {HTMLButtonElement | null} */
-    this.newCommentButton = null;
-
-    /** @type {InputSectionDOM | null} */
-    this.inputSectionDom = null;
+    /** @type {GommentDOM | null} */
+    this.dom = null;
 
     /** @type {CommentTreeNode} */
     this.replyRecipient = this.rootNode;
@@ -186,6 +191,17 @@ export class Gomment {
   }
 
   /**
+   * Returns the GommentDOM structure or throws an error if gomment was not injected yet.
+   * @returns {GommentDOM}
+   */
+  getDom() {
+    if (this.dom === null) {
+      throw new Error('precondition failed: gomment was not injected yet');
+    }
+    return this.dom;
+  }
+
+  /**
    * Set various thread attributes and update the DOM accordingly.
    * @param {CommentQueryResponse} queryResponse - The response for querying comments initially.
    */
@@ -193,9 +209,7 @@ export class Gomment {
     this.numTotal = queryResponse.num_total;
     this.rootNode.comment.num_children = queryResponse.num_root;
     this.threadId = queryResponse.thread_id;
-    if(this.elTitle !== null) {
-      this.elTitle.innerText = `${this.i18n.title} (${this.numTotal} ${this.i18n.title_total})`;
-    }
+    this.getDom().elTitle.innerText = `${this.i18n.title} (${this.numTotal} ${this.i18n.title_total})`;
   }
 
   /**
@@ -207,15 +221,30 @@ export class Gomment {
     window.fetch(`${this.apiURL}comments/${this.sortingOrder}?threadPath=${encodeURIComponent(this.threadPath)}&max=${this.batchSize}&depth=${this.maxDepth}`)
       .then(rawData => rawData.json())
       .then(/** @type {function(CommentQueryResponse): void} */ jsonData => {
-        const rootDom = this.rootNode.dom;
-        while (reload && rootDom && rootDom.elChildren.firstChild) {
-          rootDom.elChildren.removeChild(rootDom.elChildren.firstChild);
+        const dom = this.getDom();
+        while (reload && dom.rootCommentDom.elChildren.firstChild) {
+          dom.rootCommentDom.elChildren.removeChild(dom.rootCommentDom.elChildren.firstChild);
         }
 
         this.setThreadMetadata(jsonData);
         this.rootNode.children = jsonData.comments;
 
+        dom.elLoadingInfo.hidden = true;
+        dom.rootCommentDom.elRoot.hidden = false;
+
         this.renderComment(this.rootNode);
+      })
+      .catch(err => {
+        console.error(err);
+
+        const dom = this.getDom();
+        const elErrorMsg = dom.elLoadingInfo.querySelector('span');
+
+        if (elErrorMsg) {
+          elErrorMsg.innerText = this.i18n.loading_error;
+        }
+        dom.rootCommentDom.elRoot.hidden = true;
+        dom.elLoadingInfo.hidden = false;
       });
   }
 
@@ -255,7 +284,7 @@ export class Gomment {
   /**
    * Create a DOM node for displaying a comment and return references to specific elements.
    * @param {boolean} isRootComment - indicates whether content-specific DOM element shall be omited.
-   * @returns {CommentDom}
+   * @returns {CommentDOM}
    */
   createEmptyCommentDom(isRootComment) {
     const elRoot = insertElement('div', isRootComment ? 'gmnt__comments' : 'gmnt-c', null);
@@ -295,7 +324,7 @@ export class Gomment {
       throw new Error('failed precondition: parent DOM must be created before rendering child comment');
     }
 
-    /** @type {CommentDom | null} */
+    /** @type {CommentDOM | null} */
     let previousDom = null;
 
     parentNode.children.forEach(childNode => {
@@ -426,21 +455,19 @@ export class Gomment {
    * @param {CommentTreeNode} recipient - new recipient
    */
   moveInputSection(newParent, recipient) {
-    if(this.inputSectionDom === null || this.newCommentButton === null) {
-      throw new Error('precondition failed: inputSectionDom and newCommentButton must be created before calling moveInputSection');
-    }
+    const dom = this.getDom();
 
     // Hide new comment button
-    this.newCommentButton.hidden = recipient === this.rootNode;
+    dom.elNewCommentButton.hidden = recipient === this.rootNode;
 
     // Set recipient
     this.replyRecipient = recipient;
 
     // Move
     if (newParent.childNodes.length === 0) {
-      newParent.appendChild(this.inputSectionDom.elRoot);
+      newParent.appendChild(dom.inputSectionDom.elRoot);
     } else {
-      newParent.insertBefore(this.inputSectionDom.elRoot, newParent.childNodes[0]);
+      newParent.insertBefore(dom.inputSectionDom.elRoot, newParent.childNodes[0]);
     }
   }
 
@@ -449,16 +476,14 @@ export class Gomment {
    * @returns {void}
    */
   hideInputSection() {
-    if(this.inputSectionDom === null || this.newCommentButton === null) {
-      throw new Error('precondition failed: inputSectionDom and newCommentButton must be created before calling hideInputSection');
-    }
+    const dom = this.getDom();
 
     // show the 'new comment' button
-    this.newCommentButton.hidden = false;
+    dom.elNewCommentButton.hidden = false;
 
     /** @type {HTMLElement | null} */
-    const currentParent = this.inputSectionDom.elRoot.parentElement;
-    currentParent && currentParent.removeChild(this.inputSectionDom.elRoot);
+    const currentParent = dom.inputSectionDom.elRoot.parentElement;
+    currentParent && currentParent.removeChild(dom.inputSectionDom.elRoot);
   }
 
   /**
@@ -486,12 +511,10 @@ export class Gomment {
   }
 
   onSendComment() {
-    if(this.inputSectionDom === null) {
-      throw new Error('precondition failed: onSendComment requires inputSectionDom to be non-null');
-    }
+    const dom = this.getDom();
 
     /** @type {InputSectionDOM} */
-    const d = this.inputSectionDom;
+    const d = dom.inputSectionDom;
 
     // disable all input elements to give visual indication
     const elements = [
@@ -551,7 +574,7 @@ export class Gomment {
     parent.children.unshift(childNode);
     this.renderComment(parent);
 
-    /** @type {CommentDom | null} */
+    /** @type {CommentDOM | null} */
     const newDom = childNode.dom;
     if (newDom === null) {
       throw new Error('postcondition failed: child DOM must be present after rendering');
@@ -580,7 +603,7 @@ export class Gomment {
     }
 
     // Create container element
-    this.elTitle = insertElement('div', 'gmnt__title', container, { innerHTML: this.i18n.title });
+    const elTitle = insertElement('div', 'gmnt__title', container, { innerHTML: this.i18n.title });
 
     // create container at the top of the comments for the input section
     const topInputSectionContainer = insertElement('div', 'gmnt__input-section-container', container);
@@ -594,21 +617,31 @@ export class Gomment {
     });
 
     // create button for moving the comment section to the top level
-    const newButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt__new-comment-btn', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
-    newButton.addEventListener('click', e => {
+    const elNewCommentButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt__new-comment-btn', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
+    elNewCommentButton.addEventListener('click', e => {
       this.moveInputSection(topInputSectionContainer, this.rootNode);
     })
-    this.newCommentButton = newButton
 
-    this.inputSectionDom = this.createInputSection();
-    topInputSectionContainer.appendChild(this.inputSectionDom.elRoot);
+    const inputSectionDom = this.createInputSection();
+    topInputSectionContainer.appendChild(inputSectionDom.elRoot);
+
+    const elLoadingInfo = insertElement('div', 'gmnt__loading-info', container, {innerHTML: `<span>${this.i18n.loading_progress}</span>`});
+
+    // Comments section
+    const rootCommentDom = this.createEmptyCommentDom(true);
+    this.rootNode.dom = rootCommentDom;
+    container.appendChild(this.rootNode.dom.elRoot);
+
+    this.dom = {
+      elTitle,
+      elLoadingInfo,
+      elNewCommentButton,
+      inputSectionDom,
+      rootCommentDom,
+    };
 
     // Initial input field position
     this.moveInputSection(topInputSectionContainer, this.rootNode);
-
-    // Comments section
-    this.rootNode.dom = this.createEmptyCommentDom(true);
-    container.appendChild(this.rootNode.dom.elRoot);
 
     // Load and render comments
     this.loadComments(false);
