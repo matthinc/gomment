@@ -12,6 +12,7 @@ import (
 
 	"github.com/matthinc/gomment/api"
 	"github.com/matthinc/gomment/auth"
+	"github.com/matthinc/gomment/config"
 	"github.com/matthinc/gomment/logic"
 	"github.com/matthinc/gomment/persistence/sqlite"
 )
@@ -31,6 +32,12 @@ func main() {
 		}
 	}
 
+	_, err := config.ReadConfig()
+	if err != nil {
+		log.Fatal(err)
+		os.Exit(-1)
+	}
+
 	db := sqlite.DB{}
 
 	dbPath := os.Getenv("GOMMENT_DB_PATH")
@@ -40,10 +47,10 @@ func main() {
 
 	pwHash := os.Getenv("GOMMENT_PW_HASH")
 	if len(pwHash) == 0 {
-		fmt.Println("admin password hash variable was not provided (GOMMENT_PW_HASH), disabling administration")
+		zap.L().Warn("admin password hash variable was not provided (GOMMENT_PW_HASH), disabling administration")
 	}
 
-	err := db.Open(dbPath)
+	err = db.Open(dbPath)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(2)

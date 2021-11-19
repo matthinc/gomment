@@ -3,6 +3,7 @@ module github.com/matthinc/gomment
 go 1.14
 
 require (
+	github.com/BurntSushi/toml v0.4.1 // indirect
 	github.com/gin-gonic/gin v1.7.4
 	github.com/matthewhartstonge/argon2 v0.1.5
 	github.com/mattn/go-sqlite3 v1.14.9
