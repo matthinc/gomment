@@ -138,9 +138,9 @@ export class Gomment {
       title: 'Comments',
       title_total: 'Total',
       empty: 'No comments',
-      placeholder_name: 'Name',
-      placeholder_email: 'E-Mail',
-      placeholder_text: 'Your comment',
+      label_name: 'Name (public)',
+      label_email: 'Email (non-public)',
+      label_text: 'Your comment',
       submit: 'Submit',
       show_more: 'Load more comments',
       show_more_depth: 'Load more replies',
@@ -498,9 +498,12 @@ export class Gomment {
    */
   createInputSection() {
     const elRoot = insertElement('div', 'gmnt-is', null);
-    const elMail = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__email', elRoot, { placeholder: this.i18n.placeholder_email }));
-    const elName = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__name', elRoot, { placeholder: this.i18n.placeholder_name }));
-    const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gmnt-is__content', elRoot, { placeholder: this.i18n.placeholder_text }));
+    insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_name});
+    const elName = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__name', elRoot));
+    insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_email});
+    const elMail = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__email', elRoot));
+    insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_text});
+    const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gmnt-is__content', elRoot));
     const elError = /** @type {HTMLInputElement} */ (insertElement('span', 'gmnt-is__error', elRoot));
     const elSubmit = /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt-is__submit', elRoot, { innerHTML: this.i18n.submit}));
 

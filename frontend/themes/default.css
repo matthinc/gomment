@@ -70,6 +70,14 @@
     max-width: calc(100% - 20px);
 }
 
+.gmnt-is__label {
+    line-height: 0.8em;
+    font-size: 12px;
+    display: block;
+    padding-top: 4px;
+    color: #4d4d4d;
+}
+
 .gmnt-is input {
     display: block;
     width: 100%;
@@ -77,6 +85,7 @@
     margin: 5px 0px 5px 0px;
     border: 1px solid #bebebe;
     padding: 5px 7px 5px 7px;
+    margin-top: 0px;
 }
 
 .gmnt-is input:focus {
@@ -90,6 +99,7 @@
     min-height: 100px;
     border: 1px solid #bebebe;
     padding: 5px;
+    margin-top: 0px;
 }
 
 .gmnt-is textarea:focus {
