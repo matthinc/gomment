@@ -144,7 +144,6 @@ export class Gomment {
       submit: 'Submit',
       show_more: 'Load more comments',
       show_more_depth: 'Load more replies',
-      alert_missing_information: 'Please fill out all required fields!',
       reply: 'Reply',
       new_comment: 'Write comment',
       network_error: 'A network error occured',
@@ -154,6 +153,10 @@ export class Gomment {
       newest_branch_first: 'Newest Branch First',
       newest_sibling_first: 'Newest Sibling First',
       oldest_sibling_first: 'Oldest Sibling First',
+      validation_unknown: 'An unknown validation error occurred.',
+      validation_error_required: (/** @type {string} */field) => `Non-optional field '${field}' must be filled out.`,
+      validation_error_length: (/** @type {string} */field, /** @type {number} */min, /** @type {number} */max) => `Field '${field}' must be between ${min} and ${max} characters.`,
+      validation_error_symbol: (/** @type {string} */field, /** @type {string} */symbol) => `Field '${field}' must contain the symbol '${symbol}'.`,
       /** @type {(date: Date) => string} */
       format_date: defaultDateTransformer
     };
@@ -413,43 +416,43 @@ export class Gomment {
    * @param {string} name
    * @param {string} email
    * @param {string} content - text content
-   * @returns {Promise<CommentModel>}
+   * @returns {Promise<CommentModel>} or an i18n error string
    */
-  publishComment(parent, name, email, content) {
-    return new Promise((resolve, reject) => {
-      if (!name || !email || !content) {
-        return reject(this.i18n.alert_missing_information);
-      }
+  async publishComment(parent, name, email, content) {
+    const data = {
+      author: name,
+      email,
+      text: content,
+      parent_id: parent,
+      thread_path: this.threadPath,
+    };
 
-      const data = {
-        author: name,
-        email,
-        text: content,
-        parent_id: parent,
-        thread_path: this.threadPath,
-      };
-
-      // Post comment
-      window.fetch(`${this.apiURL}comment`, {
-        method: 'POST',
-        body: JSON.stringify(data)
-      })
-        .then(response => response.json())
-        .then(data => {
-          const now = new Date().valueOf() / 1000;
-          return resolve({
-            comment_id: data.id,
-            author: name,
-            created_at: now,
-            touched_at: now,
-            text: content,
-            num_children: 0,
-          });
-        })
-        .catch(err => {
-          return reject(err);
-        });
+    // Post comment
+    const response = await window.fetch(`${this.apiURL}comment`, {
+      method: 'POST',
+      body: JSON.stringify(data)
     });
+
+    if(response.ok) {
+      const data = await response.json();
+      const now = new Date().valueOf() / 1000;
+      return {
+        comment_id: data.id,
+        author: name,
+        created_at: now,
+        touched_at: now,
+        text: content,
+        num_children: 0,
+      };
+    }
+    if(response.status === 400) {
+      const data = await response.json();
+      if (data.error_type === 'validation_error') {
+        throw this.getValidationErrorMessage(data);
+      }
+    }
+
+    throw new Error('non status 400 error');
   }
 
   /**
@@ -669,5 +672,26 @@ export class Gomment {
     }
 
     return pathname;
+  }
+
+  /**
+   * Convert a validation error into a i18n-ized error message.
+   * @param {any} validationErrorJson - The validation error json object.
+   * @returns {string}
+   */
+  getValidationErrorMessage(validationErrorJson) {
+    const fieldName = validationErrorJson.validation_field_name;
+    switch(validationErrorJson.validation_type){
+    case 'required':
+      return this.i18n.validation_error_required(fieldName);
+    case 'length':
+      const split = validationErrorJson.validation_info.split(',');
+      const min = parseInt(split[0], 10);
+      const max = parseInt(split[1], 10);
+      return this.i18n.validation_error_length(fieldName, min, max);
+    case 'symbol':
+      return this.i18n.validation_error_symbol(fieldName, validationErrorJson.validation_info);
+    }
+    return this.i18n.validation_unknown;
   }
 }

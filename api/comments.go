@@ -22,7 +22,7 @@ func routePostComment(c *gin.Context, bl *logic.BusinessLogic) {
 	var commentCreation model.CommentCreation
 	err := c.BindJSON(&commentCreation)
 	if err != nil {
-		zap.L().Sugar().Infow("routePostComment", err)
+		zap.L().Sugar().Info("routePostComment ", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 		})
@@ -66,7 +66,7 @@ func routeGetComments(order orderType, c *gin.Context, logic *logic.BusinessLogi
 	// Required thread parameter
 	threadPath, err := getStringQueryParameter(c, "threadPath")
 	if err != nil {
-		zap.L().Sugar().Infow("routeGetComments", err)
+		zap.L().Sugar().Info("routeGetComments ", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})

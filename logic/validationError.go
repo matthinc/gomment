@@ -32,7 +32,7 @@ func ValidationErrorLength(fieldName string, min uint, max uint) ValidationError
 	return ValidationError{
 		FieldName:      fieldName,
 		ValidationType: validationTypeLength,
-		Info:           fmt.Sprintf("[%d,%d]", min, max),
+		Info:           fmt.Sprintf("%d,%d", min, max),
 	}
 }
 

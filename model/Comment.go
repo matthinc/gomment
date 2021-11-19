@@ -13,9 +13,9 @@ type Comment struct {
 
 type CommentCreation struct {
 	ThreadPath string `json:"thread_path" binding:"required"`
-	Author     string `json:"author" binding:"required"`
-	Email      string `json:"email" binding:"required"`
-	Text       string `json:"text" binding:"required"`
+	Author     string `json:"author"`
+	Email      string `json:"email"`
+	Text       string `json:"text"`
 	ParentId   int64  `json:"parent_id"` // optional, maps to 0 if not provided
 }
 
