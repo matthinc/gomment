@@ -53,6 +53,11 @@ func (db *MockDb) GetMoreCommentsOsf(threadId int64, parentId int64, newestCreat
 }
 func (db *MockDb) GetThreads() ([]model.Thread, error) { return []model.Thread{}, nil }
 
+func createSut(db *MockDb) logic.BusinessLogic {
+	val := logic.GetDefaultValidation()
+	return logic.Create(db, logic.AdministrationT{""}, val)
+}
+
 func TestSimple(t *testing.T) {
 	db := MockDb{
 		comments: []model.Comment{{
@@ -66,7 +71,7 @@ func TestSimple(t *testing.T) {
 			NumChildren: 0,
 		}},
 	}
-	sut := logic.Create(&db, "")
+	sut := createSut(&db)
 
 	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
@@ -102,7 +107,7 @@ func TestTwoRootComments(t *testing.T) {
 			NumChildren: 0,
 		}},
 	}
-	sut := logic.Create(&db, "")
+	sut := createSut(&db)
 
 	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
@@ -141,7 +146,7 @@ func TestTwoChainedComments(t *testing.T) {
 			NumChildren: 0,
 		}},
 	}
-	sut := logic.Create(&db, "")
+	sut := createSut(&db)
 
 	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
@@ -200,7 +205,7 @@ func TestTwoChains(t *testing.T) {
 			NumChildren: 0,
 		}},
 	}
-	sut := logic.Create(&db, "")
+	sut := createSut(&db)
 
 	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)
@@ -241,7 +246,7 @@ func TestLeafyChain(t *testing.T) {
 			ParentId: 2,
 		}},
 	}
-	sut := logic.Create(&db, "")
+	sut := createSut(&db)
 
 	commentResponse, err := sut.GetCommentsNbf("", 0, 99, 99)
 	require.NoError(t, err)

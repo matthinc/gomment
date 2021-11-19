@@ -23,7 +23,7 @@ func routeAdminLogin(c *gin.Context, l *logic.BusinessLogic) {
 		fmt.Println(err)
 	}
 
-	isValid := auth.ValidatePw(loginRequest.Password, l.PwHash)
+	isValid := auth.ValidatePw(loginRequest.Password, l.Administration.PasswordHash)
 	var sessionId string
 	var sessionData logic.SessionData
 	if isValid {

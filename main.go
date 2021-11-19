@@ -32,7 +32,7 @@ func main() {
 		}
 	}
 
-	_, err := config.ReadConfig()
+	config, err := config.ReadConfig()
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(-1)
@@ -45,8 +45,8 @@ func main() {
 		dbPath = "./gomment.db"
 	}
 
-	pwHash := os.Getenv("GOMMENT_PW_HASH")
-	if len(pwHash) == 0 {
+	passwordHash := os.Getenv("GOMMENT_PW_HASH")
+	if len(passwordHash) == 0 {
 		zap.L().Warn("admin password hash variable was not provided (GOMMENT_PW_HASH), disabling administration")
 	}
 
@@ -61,7 +61,16 @@ func main() {
 		os.Exit(3)
 	}
 
-	logic := logic.Create(&db, pwHash)
+	val := logic.GetDefaultValidation()
+	val.RequireAuthor = config.Validation.RequireAuthor
+	val.RequireEmail = config.Validation.RequireEmail
+	val.CommentLengthMin = uint(config.Validation.CommentLengthMin)
+	val.CommentLengthMax = uint(config.Validation.CommentLengthMax)
+	val.CommentDepthMax = uint(config.Limits.CommentDepthMax)
+	val.InitialQueryDepthMax = uint(config.Limits.InitialQueryDepthMax)
+	val.QueryLimitMax = uint(config.Limits.QueryLimitMax)
+
+	logic := logic.Create(&db, logic.AdministrationT{PasswordHash: passwordHash}, val)
 
 	api.StartApi(&logic)
 }

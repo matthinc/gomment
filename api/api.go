@@ -147,7 +147,7 @@ func StartApi(logic *logic.BusinessLogic) {
 	v1.GET("/comments/osf", injectLogic(routeGetCommentsOsf, logic))
 	v1.GET("/morecomments/osf", injectLogic(routeGetMoreCommentsOsf, logic))
 
-	if len(logic.PwHash) > 0 {
+	if len(logic.Administration.PasswordHash) > 0 {
 		// enable admin API routes
 		v1.POST("/admin/login", injectLogic(routeAdminLogin, logic))
 		v1.GET("/admin/threads", adminJsonMiddleware(routeAdminThreads, logic))

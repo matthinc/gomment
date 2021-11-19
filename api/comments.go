@@ -18,7 +18,7 @@ const (
 	orderOsf orderType = iota
 )
 
-func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
+func routePostComment(c *gin.Context, bl *logic.BusinessLogic) {
 	var commentCreation model.CommentCreation
 	err := c.BindJSON(&commentCreation)
 	if err != nil {
@@ -33,9 +33,13 @@ func routePostComment(c *gin.Context, logic *logic.BusinessLogic) {
 		Id int64 `json:"id"`
 	}
 
-	result.Id, err = logic.CreateComment(&commentCreation)
+	result.Id, err = bl.CreateComment(&commentCreation)
 	if err != nil {
-		zap.L().Sugar().Errorw("routePostComment", err)
+		if valErr, ok := err.(logic.ValidationError); ok {
+			handleValidationError(c, valErr)
+			return
+		}
+		zap.L().Sugar().Error("routePostComment", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})
@@ -86,7 +90,7 @@ func routeGetComments(order orderType, c *gin.Context, logic *logic.BusinessLogi
 		comments, err = logic.GetCommentsOsf(threadPath, parent, depth, max)
 	}
 	if err != nil {
-		zap.L().Sugar().Errorw("routeGetComments", err)
+		zap.L().Sugar().Error("routeGetComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})
@@ -136,7 +140,7 @@ func routeGetMoreComments(order orderType, c *gin.Context, logic *logic.Business
 		comments, err = logic.GetMoreCommentsOsf(threadId, parentId, newestCreatedAt, excludeIds, limit)
 	}
 	if err != nil {
-		zap.L().Sugar().Errorw("routeGetMoreComments", err)
+		zap.L().Sugar().Error("routeGetMoreComments", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"status": "error",
 		})

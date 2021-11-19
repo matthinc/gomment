@@ -48,7 +48,7 @@ func TestValidateCommentLengthSwapped(t *testing.T) {
 
 func TestValidateMaxCommentDepth(t *testing.T) {
 	cfg := config.GetDefaultConfig()
-	cfg.Limits.MaxCommentDepth = 10
+	cfg.Limits.CommentDepthMax = 10
 
 	err := config.ValidateConfig(cfg)
 	assert.NoError(t, err, "expected validation of comment depth 10 to be successful")
@@ -56,7 +56,7 @@ func TestValidateMaxCommentDepth(t *testing.T) {
 
 func TestValidateMaxCommentDepthNegative(t *testing.T) {
 	cfg := config.GetDefaultConfig()
-	cfg.Limits.MaxCommentDepth = -1
+	cfg.Limits.CommentDepthMax = -1
 
 	err := config.ValidateConfig(cfg)
 	assert.Error(t, err, "expected validation to fail for negative maximum comment depth")
@@ -64,8 +64,8 @@ func TestValidateMaxCommentDepthNegative(t *testing.T) {
 
 func TestValidateMaxInitialQueryDepthHigher(t *testing.T) {
 	cfg := config.GetDefaultConfig()
-	cfg.Limits.MaxCommentDepth = 9
-	cfg.Limits.MaxInitialQueryDepth = 10
+	cfg.Limits.CommentDepthMax = 9
+	cfg.Limits.InitialQueryDepthMax = 10
 
 	err := config.ValidateConfig(cfg)
 	assert.Error(t, err, "expected validation to fail for maximum comment depth being smaller that maximum initial query depth")
@@ -73,7 +73,7 @@ func TestValidateMaxInitialQueryDepthHigher(t *testing.T) {
 
 func TestValidateMaxQueryLimitZero(t *testing.T) {
 	cfg := config.GetDefaultConfig()
-	cfg.Limits.MaxQueryLimit = 0
+	cfg.Limits.QueryLimitMax = 0
 
 	err := config.ValidateConfig(cfg)
 	assert.Error(t, err, "expected validation to fail for negative maximum comment limit")
