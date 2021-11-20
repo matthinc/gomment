@@ -303,7 +303,7 @@ export class Gomment {
       elAuthor = insertElement('div', 'gmnt-c__author', elRoot);
       elDate = insertElement('div', 'gmnt-c__date', elRoot);
       elText = insertElement('div', 'gmnt-c__text', elRoot);
-      elReply = insertElement('a', 'gmnt-c__reply', elRoot, { innerHTML: this.i18n.reply });
+      elReply = insertElement('a', 'gmnt-c__reply', elRoot, { innerText: this.i18n.reply });
     }
     const elChildren = insertElement('div', 'gmnt-c__children', elRoot);
 
@@ -345,9 +345,9 @@ export class Gomment {
         throw new Error('failed to create comment DOM element');
       }
 
-      dom.elAuthor.innerHTML = childNode.comment.author;
-      dom.elDate.innerHTML = this.i18n.format_date(new Date(childNode.comment.created_at * 1000));
-      dom.elText.innerHTML = childNode.comment.text;
+      dom.elAuthor.innerText = childNode.comment.author;
+      dom.elDate.innerText = this.i18n.format_date(new Date(childNode.comment.created_at * 1000));
+      dom.elText.innerText = childNode.comment.text;
 
       dom.elReply.onclick = () => {
         this.moveInputSection(dom.elChildren, childNode);
@@ -376,7 +376,7 @@ export class Gomment {
     if (!parentDom.elMoreSiblings && showMoreCondition) {
       parentDom.elMoreSiblings = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
       insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreSiblings, {
-        innerHTML: this.i18n.show_more,
+        innerText: this.i18n.show_more,
         onclick: () => this.loadMoreSiblings(parentNode),
       });
     }
@@ -397,7 +397,7 @@ export class Gomment {
       // No children but hasChildren -> Load more button
       parentDom.elMoreChildren = insertElement('div', 'gmnt-c__show-more-container', parentDom.elRoot);
       insertElement('button', 'gmnt-c__show-more-btn', parentDom.elMoreChildren, {
-        innerHTML: this.i18n.show_more_depth,
+        innerText: this.i18n.show_more_depth,
         onclick: () => this.loadMoreSiblings(parentNode)
       });
     }
@@ -505,7 +505,7 @@ export class Gomment {
     insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_text});
     const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gmnt-is__content', elRoot));
     const elError = /** @type {HTMLInputElement} */ (insertElement('span', 'gmnt-is__error', elRoot));
-    const elSubmit = /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt-is__submit', elRoot, { innerHTML: this.i18n.submit}));
+    const elSubmit = /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt-is__submit', elRoot, { innerText: this.i18n.submit}));
 
     elSubmit.addEventListener('click', this.onSendComment.bind(this));
 
@@ -612,7 +612,7 @@ export class Gomment {
     }
 
     // Create container element
-    const elTitle = insertElement('div', 'gmnt__title', container, { innerHTML: this.i18n.title });
+    const elTitle = insertElement('div', 'gmnt__title', container, { innerText: this.i18n.title });
 
     // create container at the top of the comments for the input section
     const topInputSectionContainer = insertElement('div', 'gmnt__input-section-container', container);
@@ -626,7 +626,7 @@ export class Gomment {
     });
 
     // create button for moving the comment section to the top level
-    const elNewCommentButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt__new-comment-btn', topInputSectionContainer, { innerHTML: this.i18n.new_comment}));
+    const elNewCommentButton =  /** @type {HTMLButtonElement} */ (insertElement('button', 'gmnt__new-comment-btn', topInputSectionContainer, { innerText: this.i18n.new_comment}));
     elNewCommentButton.addEventListener('click', e => {
       this.moveInputSection(topInputSectionContainer, this.rootNode);
     })
