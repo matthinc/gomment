@@ -18,13 +18,28 @@
  */
 
 /**
- * A response returned by the backend for a comment query.
- * @typedef {Object} CommentQueryResponse
+ * A response object containing the data for a comment thread.
+ * @typedef {Object} ThreadResponse
  * @property {Array<CommentTreeNode>} comments - The queried comments.
  * @property {number} num_total - The total amount of comments available in the thread.
  * @property {number} num_root - The amount of root comments.
  * @property {number} num_root_payload - The amount of comments returned by the query.
  * @property {number} thread_id - The identifier of this thread.
+ */
+
+/**
+ * A response object containing the relevant server configuration.
+ * @typedef {Object} ConfigResponse
+ * @property {boolean} config.require_email - Whether an email is required for commenting.
+ * @property {boolean} config.require_author - Whether a author name is required for commenting.
+ * @property {boolean} config.require_approval - Whether administrational approval is required for publishing a comment.
+ */
+
+/**
+ * A response returned by the backend for a comment query.
+ * @typedef {Object} CommentQueryResponse
+ * @property {ThreadResponse} thread - data for the comment thread.
+ * @property {ConfigResponse} config - relevant server configuration.
  */
 
 /**
@@ -44,7 +59,9 @@
  * A collection of all relevent DOM elements in the comment creation dialog.
  * @typedef {Object} InputSectionDOM
  * @property {HTMLElement} elRoot - .
+ * @property {HTMLElement} elMailLabel - .
  * @property {HTMLInputElement} elMail - .
+ * @property {HTMLElement} elNameLabel - .
  * @property {HTMLInputElement} elName - .
  * @property {HTMLTextAreaElement} elContent - .
  * @property {HTMLSpanElement} elError - .
@@ -138,8 +155,8 @@ export class Gomment {
       title: 'Comments',
       title_total: 'Total',
       empty: 'No comments',
-      label_name: 'Name (public)',
-      label_email: 'Email (non-public)',
+      label_name: (/** @type {boolean} */isRequired) => `Name (public, ${isRequired ? 'required' : 'optional'})`,
+      label_email: (/** @type {boolean} */isRequired) => `Email (non-public, ${isRequired ? 'required' : 'optional'})`,
       label_text: 'Your comment',
       submit: 'Submit',
       show_more: 'Load more comments',
@@ -212,10 +229,14 @@ export class Gomment {
    * @param {CommentQueryResponse} queryResponse - The response for querying comments initially.
    */
   setThreadMetadata(queryResponse) {
-    this.numTotal = queryResponse.num_total;
-    this.rootNode.comment.num_children = queryResponse.num_root;
-    this.threadId = queryResponse.thread_id;
-    this.getDom().elTitle.innerText = `${this.i18n.title} (${this.numTotal} ${this.i18n.title_total})`;
+    this.numTotal = queryResponse.thread.num_total;
+    this.rootNode.comment.num_children = queryResponse.thread.num_root;
+    this.threadId = queryResponse.thread.thread_id;
+
+    const dom = this.getDom();
+    dom.elTitle.innerText = `${this.i18n.title} (${this.numTotal} ${this.i18n.title_total})`;
+    dom.inputSectionDom.elNameLabel.innerText = this.i18n.label_name(queryResponse.config.require_author);
+    dom.inputSectionDom.elMailLabel.innerText = this.i18n.label_email(queryResponse.config.require_email);
   }
 
   /**
@@ -233,7 +254,7 @@ export class Gomment {
         }
 
         this.setThreadMetadata(jsonData);
-        this.rootNode.children = jsonData.comments;
+        this.rootNode.children = jsonData.thread.comments;
 
         dom.elLoadingInfo.hidden = true;
         dom.rootCommentDom.elRoot.hidden = false;
@@ -498,9 +519,9 @@ export class Gomment {
    */
   createInputSection() {
     const elRoot = insertElement('div', 'gmnt-is', null);
-    insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_name});
+    const elNameLabel = insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_name(true)});
     const elName = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__name', elRoot));
-    insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_email});
+    const elMailLabel = insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_email(true)});
     const elMail = /** @type {HTMLInputElement} */ (insertElement('input', 'gmnt-is__email', elRoot));
     insertElement('span', 'gmnt-is__label', elRoot, { innerText: this.i18n.label_text});
     const elContent = /** @type {HTMLTextAreaElement} */ (insertElement('textarea', 'gmnt-is__content', elRoot));
@@ -511,7 +532,9 @@ export class Gomment {
 
     return {
       elRoot,
+      elMailLabel,
       elMail,
+      elNameLabel,
       elName,
       elContent,
       elError,

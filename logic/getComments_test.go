@@ -55,7 +55,7 @@ func (db *MockDb) GetThreads() ([]model.Thread, error) { return []model.Thread{}
 
 func createSut(db *MockDb) logic.BusinessLogic {
 	val := logic.GetDefaultValidation()
-	return logic.Create(db, logic.AdministrationT{""}, val)
+	return logic.NewLogic(db, logic.AdministrationT{"", false}, val)
 }
 
 func TestSimple(t *testing.T) {

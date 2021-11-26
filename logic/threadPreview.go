@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/matthinc/gomment/model"
 )
 
 var previewColors = [...]string{
@@ -16,7 +14,7 @@ var previewColors = [...]string{
 	"#f0cfff",
 }
 
-func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth int) {
+func generateTreeHtmlPreview(tree CommentTree, sb *strings.Builder, depth int) {
 	comment := tree.Comment
 	sb.WriteString(`<div style="border: 1px solid black;padding:5px;background-color:`)
 	sb.WriteString(previewColors[depth%len(previewColors)])
@@ -45,7 +43,7 @@ func generateTreeHtmlPreview(tree model.CommentTree, sb *strings.Builder, depth 
 	sb.WriteString(`</div>`)
 }
 
-func (logic *BusinessLogic) GenerateHTMLThreadPreview(commentsResponse model.CommentsResponse) string {
+func (logic *BusinessLogic) GenerateHTMLThreadPreview(commentsResponse CommentResult) string {
 	var sb strings.Builder
 	sb.WriteString("<h1>Thread Preview</h1>")
 	sb.WriteString("<h5>" + strconv.Itoa(commentsResponse.NumTotal) + " top level comments</h5>")

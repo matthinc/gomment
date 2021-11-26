@@ -11,7 +11,8 @@ type SessionData struct {
 }
 
 type AdministrationT struct {
-	PasswordHash string
+	PasswordHash    string
+	RequireApproval bool
 }
 
 type ValidationT struct {
@@ -51,7 +52,15 @@ func GetDefaultValidation() ValidationT {
 	}
 }
 
-func Create(db persistence.Persistence, administration AdministrationT, validation ValidationT) BusinessLogic {
+func (logic *BusinessLogic) GetValidation() ValidationT {
+	return logic.validation
+}
+
+func (logic *BusinessLogic) GetAdministration() AdministrationT {
+	return logic.Administration
+}
+
+func NewLogic(db persistence.Persistence, administration AdministrationT, validation ValidationT) BusinessLogic {
 	return BusinessLogic{
 		db,
 		make(map[string]SessionData),

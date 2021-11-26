@@ -2,10 +2,9 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/matthinc/gomment/logic"
 	"net/http"
 )
 
-func routeStatus(c *gin.Context, logic *logic.BusinessLogic) {
+func (api *Api) routeStatus(c *gin.Context) {
 	c.String(http.StatusOK, `{"status": "ok"}`)
 }

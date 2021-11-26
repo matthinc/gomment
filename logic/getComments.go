@@ -15,27 +15,27 @@ const (
 	orderOsf orderType = iota
 )
 
-func constructTreeDepthFirst(comments []model.Comment, parentId int64, depthLeft int) []model.CommentTree {
-	subtrees := make([]model.CommentTree, 0)
+func constructTreeDepthFirst(comments []model.Comment, parentId int64, depthLeft int) []CommentTree {
+	subtrees := make([]CommentTree, 0)
 
 	for _, comment := range comments {
 		if comment.ParentId == parentId {
-			var children []model.CommentTree
+			var children []CommentTree
 
 			if depthLeft > 0 {
 				children = constructTreeDepthFirst(comments, comment.Id, depthLeft-1)
 			} else {
-				children = []model.CommentTree{}
+				children = []CommentTree{}
 			}
 
-			subtrees = append(subtrees, model.CommentTree{Comment: comment, Children: children})
+			subtrees = append(subtrees, CommentTree{Comment: comment, Children: children})
 		}
 	}
 
 	return subtrees
 }
 
-func (logic *BusinessLogic) getComments(order orderType, threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) getComments(order orderType, threadPath string, parentId int64, maxDepth int, maxCount int) (CommentResult, error) {
 	var (
 		orderedComments []model.Comment
 		metadata        persistence.ThreadMetaInfo
@@ -51,12 +51,12 @@ func (logic *BusinessLogic) getComments(order orderType, threadPath string, pare
 		orderedComments, metadata, err = logic.DB.GetCommentsOsf(threadPath, maxDepth, maxCount)
 	}
 	if err != nil {
-		return model.CommentsResponse{}, fmt.Errorf("unable to get comments from database: %w", err)
+		return CommentResult{}, fmt.Errorf("unable to get comments from database: %w", err)
 	}
 
 	subtrees := constructTreeDepthFirst(orderedComments, parentId, maxDepth)
 
-	return model.CommentsResponse{
+	return CommentResult{
 		Comments:       subtrees,
 		NumRoot:        metadata.NumRoot,
 		NumTotal:       metadata.NumTotal,
@@ -65,15 +65,15 @@ func (logic *BusinessLogic) getComments(order orderType, threadPath string, pare
 	}, nil
 }
 
-func (logic *BusinessLogic) GetCommentsNbf(threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) GetCommentsNbf(threadPath string, parentId int64, maxDepth int, maxCount int) (CommentResult, error) {
 	return logic.getComments(orderNbf, threadPath, parentId, maxDepth, maxCount)
 }
 
-func (logic *BusinessLogic) GetCommentsNsf(threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) GetCommentsNsf(threadPath string, parentId int64, maxDepth int, maxCount int) (CommentResult, error) {
 	return logic.getComments(orderNsf, threadPath, parentId, maxDepth, maxCount)
 }
 
-func (logic *BusinessLogic) GetCommentsOsf(threadPath string, parentId int64, maxDepth int, maxCount int) (model.CommentsResponse, error) {
+func (logic *BusinessLogic) GetCommentsOsf(threadPath string, parentId int64, maxDepth int, maxCount int) (CommentResult, error) {
 	return logic.getComments(orderOsf, threadPath, parentId, maxDepth, maxCount)
 }
 

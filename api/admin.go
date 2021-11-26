@@ -16,18 +16,18 @@ type loginRequest struct {
 
 const AdminSid = "GOMMENT_SID"
 
-func routeAdminLogin(c *gin.Context, l *logic.BusinessLogic) {
+func (api *Api) routeAdminLogin(c *gin.Context) {
 	var loginRequest loginRequest
 	err := c.BindJSON(&loginRequest)
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	isValid := auth.ValidatePw(loginRequest.Password, l.Administration.PasswordHash)
+	isValid := auth.ValidatePw(loginRequest.Password, api.logic.Administration.PasswordHash)
 	var sessionId string
 	var sessionData logic.SessionData
 	if isValid {
-		sessionId, sessionData, err = l.CreateSession()
+		sessionId, sessionData, err = api.logic.CreateSession()
 	}
 	if isValid && err == nil {
 		c.SetSameSite(http.SameSiteStrictMode)
@@ -45,8 +45,8 @@ func routeAdminLogin(c *gin.Context, l *logic.BusinessLogic) {
 	}
 }
 
-func routeAdminThreads(c *gin.Context, l *logic.BusinessLogic) {
-	threads, err := l.DB.GetThreads()
+func (api *Api) routeAdminThreads(c *gin.Context) {
+	threads, err := api.logic.DB.GetThreads()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",

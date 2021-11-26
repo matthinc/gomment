@@ -19,19 +19,6 @@ type CommentCreation struct {
 	ParentId   int64  `json:"parent_id"` // optional, maps to 0 if not provided
 }
 
-type CommentTree struct {
-	Children []CommentTree `json:"children"`
-	Comment  Comment       `json:"comment"`
-}
-
-type CommentsResponse struct {
-	Comments       []CommentTree `json:"comments"`
-	NumRoot        int           `json:"num_root"`
-	NumTotal       int           `json:"num_total"`
-	NumRootPayload int           `json:"num_root_payload"`
-	ThreadId       int64         `json:"thread_id"`
-}
-
 type Thread struct {
 	Id       int64
 	Path     string

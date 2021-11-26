@@ -70,9 +70,13 @@ func main() {
 	val.InitialQueryDepthMax = uint(config.Limits.InitialQueryDepthMax)
 	val.QueryLimitMax = uint(config.Limits.QueryLimitMax)
 
-	logic := logic.Create(&db, logic.AdministrationT{PasswordHash: passwordHash}, val)
+	logic := logic.NewLogic(&db, logic.AdministrationT{
+		PasswordHash:    passwordHash,
+		RequireApproval: config.Moderation.RequireApproval,
+	}, val)
 
-	api.StartApi(&logic)
+	mainApi := api.NewApi(&logic)
+	mainApi.StartApi()
 }
 
 func genpw() {
