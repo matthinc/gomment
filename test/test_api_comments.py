@@ -2,7 +2,7 @@ import unittest
 import requests
 import time
 
-from .base import TestBase, EP
+from base import TestBase, EP
 
 class ApiCommentsTest(TestBase):
 

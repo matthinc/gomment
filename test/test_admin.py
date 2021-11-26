@@ -1,11 +1,10 @@
-
 import unittest
 import time
 import requests
 from dateutil.parser import parse
 import datetime
 
-from .base import TestBase, EP
+from base import TestBase, EP
 
 SESSION_DURATION = 60
 

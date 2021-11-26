@@ -10,12 +10,12 @@ test-unit:
 
 .PHONY: test-system
 test-system: build
-	python3 -m unittest test.api_basic test.admin test.api_comments
+	make -C test
 
 .PHONY: tsc
 tsc:
 	$(ts-check) frontend/gomment.js
-	$(ts-check) frontend/admin/gomment-admin.js
+#	$(ts-check) frontend/admin/gomment-admin.js
 
 .PHONY: test
 test: test-unit tsc test-system

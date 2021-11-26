@@ -1,7 +1,7 @@
 import unittest
 import requests
 
-from .base import TestBase, EP
+from base import TestBase, EP
 
 class ApiBasicTest(TestBase):
 
