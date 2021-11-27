@@ -141,14 +141,12 @@ class TestRunIndirect():
         return stdout.decode('utf-8')
 
 
-class SystemTestRunner():
-    def __init__(self, direct, test_names, json_output, passthrough, original_cwd):
-        self.direct = direct
+class TestDiscovery():
+    """Converts a set of test names into a set of executable test
+    suites."""
+
+    def __init__(self, test_names):
         self.test_names = test_names
-        self.test_suites = []
-        self.json_output = json_output
-        self.passthrough = passthrough
-        self.original_cwd = original_cwd
 
     # convert hierarchical test suites to flat test methods
     # https://stackoverflow.com/a/16823380
@@ -169,15 +167,35 @@ class SystemTestRunner():
 
         return list(self.test_suites_to_methods(suite))
 
-    def test_names_to_test_suites(self, test_names):
+    def get_test_suites_by_name(self, test_name):
         os.chdir(SCRIPT_DIR)
-
         loader = unittest.TestLoader()
-        return [next(self.test_suites_to_methods(loader.loadTestsFromName(test_name))) for test_name in test_names]
+
+        tests = loader.loadTestsFromName(test_name)
+
+        return self.test_suites_to_methods(tests)
+
+    def get_test_suites(self):
+        if len(self.test_names) == 0:
+            return self.get_all_test_suites()
+
+        test_suites = []
+        for test_name in self.test_names:
+            test_suites.extend(self.get_test_suites_by_name(test_name))
+
+        return test_suites
+
+
+class SystemTestRunner():
+    def __init__(self, direct, test_names, json_output, passthrough, original_cwd):
+        self.direct = direct
+        self.test_names = test_names
+        self.test_suites = []
+        self.json_output = json_output
+        self.passthrough = passthrough
+        self.original_cwd = original_cwd
 
     def _run_indirect(self):
-        os.chdir(self.original_cwd)
-
         # all available test methods
         test_runs = [TestRunIndirect(x, self.passthrough) for x in self.test_suites]
 
@@ -215,16 +233,13 @@ class SystemTestRunner():
             print(test_result.get_decorated_string())
 
     def _run_direct(self):
-        os.chdir(self.original_cwd)
-
         for test_suite in self.test_suites:
             TestRunDirect(test_suite_to_fq_name(test_suite), self.json_output).run()
 
     def run(self):
-        if len(self.test_names) == 0:
-            self.test_suites = self.get_all_test_suites()
-        else:
-            self.test_suites = self.test_names_to_test_suites(self.test_names)
+        self.test_suites = TestDiscovery(self.test_names).get_test_suites()
+
+        os.chdir(self.original_cwd)
 
         if self.direct:
             self._run_direct()
@@ -238,7 +253,7 @@ if __name__ == '__main__':
     parser.add_argument('--tests', type=str, default=None)
     parser.add_argument('--direct', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--json', action=argparse.BooleanOptionalAction, default=False)
-    parser.add_argument('--passthrough', action=argparse.BooleanOptionalAction, default=False, help='Enable passthrough for gomment binary. Enables quick testing without recompiling the docker image.')
+    parser.add_argument('--passthrough', action=argparse.BooleanOptionalAction, default=False, help='Enable passthrough for gomment binary. Enables quick testing without recompiling the docker image. Requires compatible glibc.')
     args = parser.parse_args()
 
     if args.passthrough and args.direct:
