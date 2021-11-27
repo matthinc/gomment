@@ -67,7 +67,7 @@ func (api *Api) routeGetComments(order orderType, c *gin.Context) {
 	threadPath, err := getStringQueryParameter(c, "threadPath")
 	if err != nil {
 		zap.L().Sugar().Info("routeGetComments ", err)
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"status": "error",
 		})
 		return

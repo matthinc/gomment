@@ -22,7 +22,8 @@ class ApiBasicTest(TestBase):
         self.assertEqual(response.status_code, 400)
 
     def test_comments_nonexistent_thread(self):
-        response = requests.get(EP + '/comments/nbf?thread=0')
-        comments = response.json()
+        response = requests.get(EP + '/comments/nbf?threadPath=%2F')
+        json_data = response.json()
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(comments, {'total': 0, 'comments': []})
+        self.assertEqual(json_data['thread']['num_total'], 0)
+        self.assertEqual(json_data['thread']['comments'], [])
