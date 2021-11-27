@@ -2,8 +2,10 @@ import unittest
 import os
 import concurrent.futures
 import argparse
-import pickle
+import json
 import subprocess
+import io
+import sys
 
 
 SCRIPT_DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
@@ -13,19 +15,44 @@ def test_suite_to_fq_name(test_suite):
     return f'{test_suite.__class__.__module__}.{test_suite.__class__.__qualname__}.{test_suite._testMethodName}'
 
 
-class TestRun():
-    def __init__(self, fq_test_name):
+# class encapsulating one single test method
+class TestRunDirect():
+    def __init__(self, fq_test_name, json_output):
         self.fq_test_name = fq_test_name
+        self.json_output = json_output
 
     def run(self):
+        stream = sys.stderr
+        stdredir = io.StringIO()
+
+        if self.json_output:
+            stream = io.StringIO()
+            sys.stdout = stdredir
+            sys.stderr = stdredir
+
         loader = unittest.TestLoader()
         suite = loader.loadTestsFromName(self.fq_test_name)
 
-        runner = unittest.TextTestRunner()
+        runner = unittest.TextTestRunner(stream=stream)
         result = runner.run(suite)
 
+        # restore original stdout + stderr
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
-class TestRunDispatcher():
+        if self.json_output:
+            ret = {
+                'app_output': stdredir.getvalue(),
+                'test_output': stream.getvalue(),
+                'failures': [x[1] for x in result.failures],
+                'errors': [x[1] for x in result.errors],
+                'tests_run': result.testsRun,
+            }
+            print(json.dumps(ret))
+
+
+# class encapsulating one single test method to be run inside a container
+class TestRunIndirect():
     def __init__(self, test_suite):
         self.test_suite = test_suite
 
@@ -46,23 +73,24 @@ class TestRunDispatcher():
           -v{state_dir}:/app/test-state
           -w /app
           --env DB_PATH=/app/test-state/test.db
-          gomment-test python3 test/system_test_runner.py --direct --tests {self}
+          gomment-test python3 test/system_test_runner.py --direct --json --tests {self}
         '''.strip().replace('\n', ' ')
 
         pipe = subprocess.Popen(
             ['/bin/bash', '-c', docker_cmd],
-            # stdout=subprocess.PIPE,
-            # stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
         )
-        output = pipe.communicate()[0]
-        return output
+        stdout, stderr = pipe.communicate()
+        return stdout.decode('utf-8')
 
 
 class SystemTestRunner():
-    def __init__(self, direct, test_names, original_cwd):
+    def __init__(self, direct, test_names, json_output, original_cwd):
         self.direct = direct
         self.test_names = test_names
         self.test_suites = []
+        self.json_output = json_output
         self.original_cwd = original_cwd
 
     # convert hierarchical test suites to flat test methods
@@ -92,7 +120,7 @@ class SystemTestRunner():
 
     def _run_indirect(self):
         # all available test methods
-        test_runs = [TestRunDispatcher(x) for x in self.test_suites]
+        test_runs = [TestRunIndirect(x) for x in self.test_suites]
 
         test_results = []
 
@@ -109,13 +137,14 @@ class SystemTestRunner():
             for completed_future in completed_futures:
                 test_results.append(completed_future.result())
 
-        # print(test_results)
+        for test_result in test_results:
+            print(test_result)
 
     def _run_direct(self):
         os.chdir(self.original_cwd)
 
         for test_suite in self.test_suites:
-            TestRun(test_suite_to_fq_name(test_suite)).run()
+            TestRunDirect(test_suite_to_fq_name(test_suite), self.json_output).run()
 
     def run(self):
         if len(self.test_names) == 0:
@@ -134,6 +163,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='System test dispatcher.')
     parser.add_argument('--tests', type=str, default=None)
     parser.add_argument('--direct', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--json', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
 
     test_names = []
@@ -143,5 +173,6 @@ if __name__ == '__main__':
     SystemTestRunner(
         args.direct,
         test_names,
+        args.json,
         os.getcwd(),
     ).run()
