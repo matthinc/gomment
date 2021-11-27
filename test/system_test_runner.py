@@ -15,6 +15,48 @@ def test_suite_to_fq_name(test_suite):
     return f'{test_suite.__class__.__module__}.{test_suite.__class__.__qualname__}.{test_suite._testMethodName}'
 
 
+class TestResult():
+    def __init__(self, data = {}):
+        self.data = data
+
+    def __str__(self):
+        return f'{self.decorate_test_status(self.get_test_status())} {self.get_test_name()}'
+
+    def from_json(self, json_data):
+        self.data = json.loads(json_data)
+
+    def to_json(self):
+        return json.dumps(self.data)
+
+    def get_test_name(self):
+        return self.data['fq_test_name']
+
+    def get_app_output(self):
+        return self.data['app_output']
+
+    def is_successful(self):
+        return self.get_test_status() == 'success'
+
+    def get_test_status(self):
+        if len(self.data['errors']) > 0:
+            return 'error'
+        if len(self.data['failures']) > 0:
+            return 'failure'
+        if self.data['tests_run'] == 1:
+            return 'success'
+
+        return 'unknown'
+
+    def decorate_test_status(self, status):
+        m = {
+            'success': '\u001b[42m SUCCESS \u001b[0m',
+            'failure': '\u001b[41m FAILURE \u001b[0m',
+            'error':   '\u001b[45m  ERROR  \u001b[0m',
+            'unknown': '\u001b[47;1m UNKNOWN \u001b[0m',
+        }
+        return m[status]
+
+
 # class encapsulating one single test method
 class TestRunDirect():
     def __init__(self, fq_test_name, json_output):
@@ -41,14 +83,15 @@ class TestRunDirect():
         sys.stderr = sys.__stderr__
 
         if self.json_output:
-            ret = {
+            res = TestResult({
+                'fq_test_name': self.fq_test_name,
                 'app_output': stdredir.getvalue(),
                 'test_output': stream.getvalue(),
                 'failures': [x[1] for x in result.failures],
                 'errors': [x[1] for x in result.errors],
                 'tests_run': result.testsRun,
-            }
-            print(json.dumps(ret))
+            })
+            print(res.to_json())
 
 
 # class encapsulating one single test method to be run inside a container
@@ -135,7 +178,9 @@ class SystemTestRunner():
             completed_futures = concurrent.futures.as_completed(futures)
 
             for completed_future in completed_futures:
-                test_results.append(completed_future.result())
+                res = TestResult()
+                res.from_json(completed_future.result())
+                test_results.append(res)
 
         for test_result in test_results:
             print(test_result)
