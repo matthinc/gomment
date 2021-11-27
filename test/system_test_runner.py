@@ -20,6 +20,10 @@ class TestResult():
         self.data = data
 
     def __str__(self):
+        fqname = self.data['fq_test_name']
+        return f'TestResult({fqname})'
+
+    def get_decorated_string(self):
         return f'{self.decorate_test_status(self.get_test_status())} {self.get_test_name()}'
 
     def from_json(self, json_data):
@@ -33,6 +37,9 @@ class TestResult():
 
     def get_app_output(self):
         return self.data['app_output']
+
+    def get_test_output(self):
+        return self.data['test_output']
 
     def is_successful(self):
         return self.get_test_status() == 'success'
@@ -96,8 +103,9 @@ class TestRunDirect():
 
 # class encapsulating one single test method to be run inside a container
 class TestRunIndirect():
-    def __init__(self, test_suite):
+    def __init__(self, test_suite, passthrough):
         self.test_suite = test_suite
+        self.passthrough = passthrough
 
     def __str__(self):
         return test_suite_to_fq_name(self.test_suite)
@@ -108,12 +116,17 @@ class TestRunIndirect():
         if not os.path.exists(state_dir):
             os.makedirs(state_dir)
 
+        passthrough_str = ''
+        if self.passthrough:
+            passthrough_str = '-v$(pwd)/gomment:/app/gomment:ro'
+
         docker_cmd = f'''
         docker run
           --rm
           -u$(id -u):$(id -g)
           -v{SCRIPT_DIR}:/app/test
           -v{state_dir}:/app/test-state
+          {passthrough_str}
           -w /app
           --env DB_PATH=/app/test-state/test.db
           gomment-test python3 test/system_test_runner.py --direct --json --tests {self}
@@ -129,11 +142,12 @@ class TestRunIndirect():
 
 
 class SystemTestRunner():
-    def __init__(self, direct, test_names, json_output, original_cwd):
+    def __init__(self, direct, test_names, json_output, passthrough, original_cwd):
         self.direct = direct
         self.test_names = test_names
         self.test_suites = []
         self.json_output = json_output
+        self.passthrough = passthrough
         self.original_cwd = original_cwd
 
     # convert hierarchical test suites to flat test methods
@@ -162,8 +176,10 @@ class SystemTestRunner():
         return [next(self.test_suites_to_methods(loader.loadTestsFromName(test_name))) for test_name in test_names]
 
     def _run_indirect(self):
+        os.chdir(self.original_cwd)
+
         # all available test methods
-        test_runs = [TestRunIndirect(x) for x in self.test_suites]
+        test_runs = [TestRunIndirect(x, self.passthrough) for x in self.test_suites]
 
         test_results = []
 
@@ -179,11 +195,24 @@ class SystemTestRunner():
 
             for completed_future in completed_futures:
                 res = TestResult()
-                res.from_json(completed_future.result())
-                test_results.append(res)
+                try:
+                    res.from_json(completed_future.result())
+                    test_results.append(res)
+                except:
+                    print(completed_future.result())
 
+        test_results.sort(key=lambda x: str(x))
+
+        # print all unsuccessful traces
         for test_result in test_results:
-            print(test_result)
+            if not test_result.is_successful():
+                print(test_result.get_decorated_string())
+                print(test_result.get_app_output())
+                print(test_result.get_test_output())
+
+        # print summary
+        for test_result in test_results:
+            print(test_result.get_decorated_string())
 
     def _run_direct(self):
         os.chdir(self.original_cwd)
@@ -209,7 +238,12 @@ if __name__ == '__main__':
     parser.add_argument('--tests', type=str, default=None)
     parser.add_argument('--direct', action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument('--json', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--passthrough', action=argparse.BooleanOptionalAction, default=False, help='Enable passthrough for gomment binary. Enables quick testing without recompiling the docker image.')
     args = parser.parse_args()
+
+    if args.passthrough and args.direct:
+        print("arguments --passthrough and --direct are incompatible")
+        sys.exit(2)
 
     test_names = []
     if not args.tests is None:
@@ -219,5 +253,6 @@ if __name__ == '__main__':
         args.direct,
         test_names,
         args.json,
+        args.passthrough,
         os.getcwd(),
     ).run()
