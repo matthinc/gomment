@@ -7,5 +7,5 @@ require (
 	github.com/lhecker/argon2 v2.0.0+incompatible // indirect
 	github.com/matthewhartstonge/argon2 v0.1.2
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
-	golang.org/x/crypto v0.0.0-20200320181102-891825fb96df
+	golang.org/x/crypto v0.1.0
 )
